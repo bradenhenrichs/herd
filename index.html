@@ -231,7 +231,7 @@
 <script>
 "use strict";
 let DATA={}, LOOKUP=new Map(), REF=new Map();
-let STATE={tab:null,q:"",filters:{},selected:null};
+let STATE={tab:null,q:"",filters:{},selected:null,taskFilter:"open"};
 let CFG={host:"mcie-prod.hwbe.io",version:"9.9.28",country:"IE",deviceId:null,token:null,creds:null,live:false,profile:null,farm:null};
 
 const $=s=>document.querySelector(s);
@@ -248,7 +248,9 @@ function humanize(k){
   if(LABELS[lk]) return LABELS[lk];
   const words=k.replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g,"$1 $2")
     .replace(/[_-]+/g," ").replace(/\s+/g," ").trim().split(" ");
-  const out=words.map(w=>{const wl=w.toLowerCase();return ACR[wl]||ABBR[wl]||w;}).join(" ");
+  let out=words.map(w=>{const wl=w.toLowerCase();return ACR[wl]||ABBR[wl]||w;}).join(" ");
+  // the value is resolved to a name, so a trailing "type id" / "id" / "type" is noise
+  out=out.replace(/\s+Type\s+ID$/i,"").replace(/\s+ID$/i,"").replace(/\s+Type$/i,"");
   return out.replace(/^\w/,c=>c.toUpperCase());
 }
 function epochMs(v){if(v&&typeof v==="object"&&typeof v.date==="number")return v.date;if(typeof v==="number"&&v>1e11&&v<4.2e12)return v;return null;}
@@ -265,6 +267,28 @@ function disp(v,key){
   return String(v);
 }
 function keyLike(sample,re){return Object.keys(sample||{}).find(k=>re.test(k));}
+
+/* pair a quantity field with its unit field (e.g. purchasedAmount 1000 + unitTypeId "kg"
+   → "1000 kg") so a record reads the way a farmer would say it. Returns merged value
+   strings keyed by the quantity field, and the set of unit-field keys to fold away. */
+const UNIT_RE=/^(kgs?|g|mg|t|tonnes?|tons?|lbs?|oz|l|ltrs?|litres?|liters?|ml|cl|bags?|bales?|units?|head|hd|doses?|straws?|packs?|rolls?|pairs?|each)$/i;
+function isNumish(v){return (typeof v==="number"&&isFinite(v))||(typeof v==="string"&&v.trim()!==""&&isFinite(Number(v)));}
+function combineUnits(item){
+  const keys=Object.keys(item), merged={}, hide=new Set();
+  const unitKeys=keys.filter(k=>{
+    const v=item[k]; if(v==null||v==="")return false;
+    if(/unit|uom|measure/i.test(k))return true;                 // named like a unit field
+    return typeof v==="string"&&UNIT_RE.test(String(disp(v)).trim()); // or its value reads as a unit
+  });
+  const qtyKeys=keys.filter(k=>isNumish(item[k])&&/amount|quantity|qty|volume|weight|rate|dose|total|count/i.test(k));
+  const used=new Set();
+  for(const u of unitKeys){
+    const ui=keys.indexOf(u); let best=null,bd=Infinity;
+    for(const q of qtyKeys){if(used.has(q))continue;const d=Math.abs(keys.indexOf(q)-ui);if(d<bd){bd=d;best=q;}}
+    if(best!=null){used.add(best);merged[best]=`${disp(item[best])} ${disp(item[u])}`.trim();hide.add(u);}
+  }
+  return {merged,hide};
+}
 
 let F={};
 function detectFields(animals){
@@ -460,15 +484,30 @@ function switchTo(target){
   document.body.classList.remove("mobiledetail");
   render();
 }
+const TASK_FILTERS=[["open","Open"],["overdue","Overdue"],["done","Done"],["all","All"]];
+function taskPasses(t,f){const i=taskInfo(t);return f==="all"?true:f==="overdue"?i.overdue:f==="done"?i.done:!i.done;}
+function taskCmp(a,b){const A=taskInfo(a),B=taskInfo(b);
+  return (A.done?1:0)-(B.done?1:0)                                   // open before done
+    || (A.overdue?0:1)-(B.overdue?0:1)                              // overdue before the rest
+    || (A.dueMs==null?Infinity:A.dueMs)-(B.dueMs==null?Infinity:B.dueMs); // soonest due first, undated last
+}
 function renderList(){
   const chipWrap=$("#chips");chipWrap.innerHTML="";
-  const fc=facets();
-  if(fc.length){chipWrap.style.display="flex";
-    fc.forEach(f=>{const c=document.createElement("button");c.className="chip"+(STATE.filters[f.field]===f.val?" on":"");c.textContent=f.label;
-      c.onclick=()=>{if(STATE.filters[f.field]===f.val)delete STATE.filters[f.field];else STATE.filters[f.field]=f.val;render();};chipWrap.appendChild(c);});
-  }else chipWrap.style.display="none";
+  const isTasks=STATE.tab==="tasks";
+  if(isTasks){
+    chipWrap.style.display="flex";
+    TASK_FILTERS.forEach(([val,label])=>{const c=document.createElement("button");c.className="chip"+(STATE.taskFilter===val?" on":"");c.textContent=label;
+      c.onclick=()=>{STATE.taskFilter=val;STATE.selected=null;render();};chipWrap.appendChild(c);});
+  }else{
+    const fc=facets();
+    if(fc.length){chipWrap.style.display="flex";
+      fc.forEach(f=>{const c=document.createElement("button");c.className="chip"+(STATE.filters[f.field]===f.val?" on":"");c.textContent=f.label;
+        c.onclick=()=>{if(STATE.filters[f.field]===f.val)delete STATE.filters[f.field];else STATE.filters[f.field]=f.val;render();};chipWrap.appendChild(c);});
+    }else chipWrap.style.display="none";
+  }
   const list=DATA[STATE.tab]||[];
-  const items=list.filter(matchRow);
+  let items=list.filter(matchRow);
+  if(isTasks){items=items.filter(t=>taskPasses(t,STATE.taskFilter)).sort(taskCmp);}
   $("#count").textContent=`${items.length} of ${list.length}`;
   const rows=$("#rows");rows.innerHTML="";
   items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item,b));
@@ -518,7 +557,7 @@ function renderHome(){
   let speciesLine=h.species.length?h.species.map(s=>`${s.value} ${String(s.label).toLowerCase()}`).join(" · "):"animals";
   if(CFG.syncedAt)speciesLine+=` · ${CFG.live?"synced":"offline copy from"} ${fmtWhen(CFG.syncedAt)}`;
   let attn="";
-  if(h.overdue.length) attn=`<button class="attn" data-go="tasks">${h.overdue.length} task${h.overdue.length>1?"s":""} overdue — ${esc(clip(h.overdue[0].title,40))}</button>`;
+  if(h.overdue.length) attn=`<button class="attn" data-go="tasks" data-task="overdue">${h.overdue.length} task${h.overdue.length>1?"s":""} overdue — ${esc(clip(h.overdue[0].title,40))}</button>`;
   else if(h.tasksTotal) attn=`<div class="attn ok">Nothing overdue — ${h.tasksTotal} task${h.tasksTotal>1?"s":""} on the books</div>`;
   const stats=[
     statCell(h.avgAge!=null?h.avgAge+"y":"—","Avg age"),
@@ -540,7 +579,7 @@ function renderHome(){
       <div class="card"><h3>Age profile</h3>${chartSVG("bar",h.ageSeries)}</div>
       ${records}
     </div>`;
-  $("#viewHome").querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>switchTo(b.dataset.go)));
+  $("#viewHome").querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.task)STATE.taskFilter=b.dataset.task;switchTo(b.dataset.go);}));
 }
 function rowContent(item,btn){
   const frag=document.createElement("div");
@@ -591,9 +630,12 @@ function renderDetail(){
     .filter((k,i,a)=>k&&keys.includes(k)&&a.indexOf(k)===i);
   const ordered=pri.concat(keys.filter(k=>!pri.includes(k)));
   const isEmpty=v=>v===null||v===undefined||v===""||(Array.isArray(v)&&!v.length);
+  const {merged,hide}=combineUnits(item);
   const fieldRow=k=>{
+    if(hide.has(k))return {skip:true};                       // unit folded into its quantity field
     const v=item[k];
     const empty=isEmpty(v);
+    if(k in merged) return {html:kvRow(humanize(k),esc(merged[k]),false,false),empty:false};
     if(v&&typeof v==="object"&&epochMs(v)===null){
       const inner=Object.entries(v).map(([ik,iv])=>`${humanize(ik)}: ${esc(disp(iv,ik))}`).join("; ");
       return {html:kvRow(humanize(k),inner||"—",false,empty),empty};
@@ -609,13 +651,13 @@ function renderDetail(){
       groups[sectionOf(k)].push(k);
     }
     body=Object.entries(groups).filter(([,ks])=>ks.length).map(([name,ks])=>{
-      let rows="",allEmpty=true;
-      for(const k of ks){const r=fieldRow(k);rows+=r.html;if(!r.empty)allEmpty=false;}
-      return `<div class="dsect${allEmpty?" allempty":""}"><h4>${name}</h4><dl>${rows}</dl></div>`;
+      let rows="",allEmpty=true,shown=0;
+      for(const k of ks){const r=fieldRow(k);if(r.skip)continue;shown++;rows+=r.html;if(!r.empty)allEmpty=false;}
+      return shown?`<div class="dsect${allEmpty?" allempty":""}"><h4>${name}</h4><dl>${rows}</dl></div>`:"";
     }).join("");
   }else{
     let rows="";
-    for(const k of ordered)rows+=fieldRow(k).html;
+    for(const k of ordered){const r=fieldRow(k);if(!r.skip)rows+=r.html;}
     body=`<dl>${rows}</dl>`;
   }
   const toggle=`<label class="showall"><input type="checkbox" id="showAll" ${STATE.showAll?"checked":""}> Show empty fields</label>`;
