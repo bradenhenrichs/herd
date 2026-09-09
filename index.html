@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2F6B34">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Herd">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Herd</title>
+<style>
+  :root{
+    --paper:#F4F5F1; --card:#FFFFFF; --ink:#1A1E16; --muted:#6B7266;
+    --line:#DADED3; --accent:#2F6B34; --accent-weak:#E4EFE2; --alert:#A5402A;
+    --radius:10px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
+  button{font:inherit;color:inherit;cursor:pointer}
+
+  header{padding:max(env(safe-area-inset-top),12px) 16px 10px;background:var(--card);border-bottom:1px solid var(--line);flex:none}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .brand h1{font-size:19px;font-weight:650;margin:0;letter-spacing:-.01em}
+  .brand .herdno{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .refresh{margin-left:auto;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--accent)}
+  .refresh:disabled{color:var(--muted);opacity:.7}
+  .search{position:relative}
+  .search input{width:100%;padding:12px 14px 12px 40px;font-size:17px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);color:var(--ink);-webkit-appearance:none}
+  .search input:focus{outline:none;border-color:var(--accent);background:var(--card)}
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2}
+
+  nav{display:flex;gap:4px;padding:8px 12px 0;background:var(--card);flex:none;overflow-x:auto}
+  nav button{padding:8px 12px 12px;border:none;background:none;color:var(--muted);font-size:15px;font-weight:550;white-space:nowrap;border-bottom:2px solid transparent}
+  nav button.on{color:var(--ink);border-bottom-color:var(--accent)}
+  nav button .n{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:5px}
+  nav button.on .n{color:var(--accent)}
+
+  main{flex:1;min-height:0;display:flex}
+  .pane{display:flex;flex-direction:column;min-height:0}
+  .list{flex:none;width:100%;border-right:1px solid var(--line);display:flex;flex-direction:column}
+  .detail{flex:1;min-width:0;overflow:auto;background:var(--paper)}
+  @media(min-width:760px){ .list{width:380px} }
+
+  .chips{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;border-bottom:1px solid var(--line);flex:none}
+  .chip{padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:13px;color:var(--muted);white-space:nowrap}
+  .chip.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+
+  .rows{overflow:auto;flex:1}
+  .row{display:block;width:100%;text-align:left;padding:12px 14px;border:none;border-bottom:1px solid var(--line);background:none}
+  .row:hover{background:var(--card)}
+  .row.on{background:var(--accent-weak)}
+  .row .tag{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:-.02em}
+  .row .nm{font-weight:600;margin-left:8px}
+  .row .meta{margin-top:3px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 14px}
+  .row .alert{color:var(--alert);font-weight:600}
+  .count{padding:8px 14px;color:var(--muted);font-size:12.5px;flex:none;border-bottom:1px solid var(--line)}
+
+  .dhead{padding:18px 18px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+  .dhead .tag{font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:-.02em}
+  .dhead .nm{font-size:16px;color:var(--muted);margin-top:2px}
+  .dhead .badges{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .badge{padding:3px 10px;border-radius:999px;background:var(--accent-weak);color:var(--accent);font-size:13px;font-weight:550}
+  .badge.warn{background:#F3E1DC;color:var(--alert)}
+  dl{margin:0;padding:0 18px}
+  .kv{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .kv dt{color:var(--muted);font-size:14px;flex:none}
+  .kv dd{margin:0;text-align:right;word-break:break-word}
+  .kv dd.mono{font-family:var(--mono);font-size:14px}
+  .showall{display:flex;align-items:center;gap:7px;padding:10px 18px 2px;font-size:13px;color:var(--muted)}
+  .showall input{width:16px;height:16px;accent-color:var(--accent)}
+  dl.hide-empty .kv.empty{display:none}
+  .back{display:none;margin:0;padding:10px 14px;background:var(--card);border:none;border-bottom:1px solid var(--line);color:var(--accent);font-weight:600;width:100%;text-align:left}
+
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;color:var(--muted);gap:14px;overflow:auto}
+  .empty h2{color:var(--ink);font-size:20px;margin:0;letter-spacing:-.01em}
+  .panel{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;text-align:left}
+  .modeswitch{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .modeswitch button{flex:1;border:none;background:none;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted)}
+  .modeswitch button.on{background:var(--accent-weak);color:var(--accent)}
+  label.fld{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+  label.fld input{padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius);font-size:16px;background:var(--card);color:var(--ink);-webkit-appearance:none}
+  label.fld input:focus{outline:none;border-color:var(--accent)}
+  details{font-size:13px;color:var(--muted)}
+  details summary{cursor:pointer;padding:4px 0}
+  details .panel{gap:8px;margin-top:6px}
+  .btn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:12px 18px;font-weight:650;font-size:15px}
+  .btn.ghost{background:var(--card);color:var(--accent);border:1px solid var(--line)}
+  .btn:disabled{opacity:.6}
+  .drop{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;text-align:center}
+  .drop.hot{border-color:var(--accent);background:var(--accent-weak)}
+  .err{color:var(--alert);font-size:13.5px;margin:2px 0 0;min-height:1em}
+  .hint{font-size:12.5px;color:var(--muted);max-width:34ch;margin:0}
+  .hidden{display:none!important}
+
+  body.mobiledetail .list{display:none}
+  body.mobiledetail .back{display:block}
+  @media(min-width:760px){ body.mobiledetail .list{display:flex} .back{display:none!important} }
+</style>
+</head>
+<body>
+<div id="loader" class="empty">
+  <h2>Herd</h2>
+  <div class="modeswitch panel" style="max-width:280px">
+    <button id="mConnect" class="on">Connect</button>
+    <button id="mFile">Load a file</button>
+  </div>
+
+  <div id="connectPanel" class="panel">
+    <label class="fld">Phone number<input id="cUser" inputmode="tel" autocomplete="username" placeholder="08…"></label>
+    <label class="fld">Password<input id="cPass" type="password" autocomplete="current-password"></label>
+    <details>
+      <summary>Advanced</summary>
+      <div class="panel">
+        <label class="fld">API host<input id="cHost" value="mcie-prod.hwbe.io"></label>
+        <label class="fld">Country code<input id="cCountry" value="IE"></label>
+        <label class="fld">App version<input id="cVer" value="9.9.28"></label>
+      </div>
+    </details>
+    <button id="doConnect" class="btn">Connect</button>
+    <button id="useDemo" class="btn ghost">Use demo herd</button>
+    <p id="connErr" class="err"></p>
+    <p class="hint">Credentials stay on this device and aren't saved — you'll sign in each time you open the app.</p>
+  </div>
+
+  <div id="filePanel" class="panel hidden">
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept=".json,application/json" multiple class="hidden">
+      <b>Choose files</b><br>or drag farmdata.json / reference.json here
+    </label>
+    <p id="loaderr" class="err"></p>
+  </div>
+</div>
+
+<div id="app" class="hidden" style="display:flex;flex-direction:column;height:100%">
+  <header>
+    <div class="brand">
+      <h1 id="farmName">Herd</h1><span class="herdno" id="herdNo"></span>
+      <button id="askBtn" class="askbtn">Ask</button>
+      <button id="refresh" class="refresh hidden" style="margin-left:6px">Refresh</button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+      <input id="q" type="search" placeholder="Search tag, name, breed…" autocomplete="off">
+    </div>
+  </header>
+  <nav id="tabs"></nav>
+  <main>
+    <section class="pane list">
+      <div class="chips" id="chips"></div>
+      <div class="count" id="count"></div>
+      <div class="rows" id="rows"></div>
+    </section>
+    <section class="pane detail">
+      <button class="back" id="back">‹ All</button>
+      <div id="detail"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+let DATA={}, LOOKUP=new Map();
+let STATE={tab:null,q:"",filters:{},selected:null};
+let CFG={host:"mcie-prod.hwbe.io",version:"9.9.28",country:"IE",deviceId:null,token:null,creds:null,live:false,profile:null,farm:null};
+
+const $=s=>document.querySelector(s);
+const now=Date.now();
+const LABELS={dob:"Date of birth",ai:"AI",tb:"TB",icbf:"ICBF",cts:"CTS",bcms:"BCMS",eid:"EID",dna:"DNA"};
+function humanize(k){
+  if(LABELS[String(k).toLowerCase()]) return LABELS[String(k).toLowerCase()];
+  return k.replace(/([a-z])([A-Z])/g,"$1 $2").replace(/[_-]+/g," ").replace(/\bid\b/ig,"ID").replace(/^\w/,c=>c.toUpperCase()).replace(/\s+/g," ").trim();
+}
+function epochMs(v){if(v&&typeof v==="object"&&typeof v.date==="number")return v.date;if(typeof v==="number"&&v>1e11&&v<4.2e12)return v;return null;}
+function fmtDate(ms){const d=new Date(ms);if(isNaN(d))return String(ms);return d.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"});}
+function ageFrom(ms){const days=(now-ms)/86400000;if(days<0)return "";const y=Math.floor(days/365),mo=Math.floor((days%365)/30);return y>=1?`${y}y ${mo}m`:`${mo}m`;}
+function disp(v,key){
+  if(v===null||v===undefined||v==="")return "—";
+  const ms=epochMs(v);if(ms!==null)return fmtDate(ms);
+  if(Array.isArray(v))return v.map(x=>disp(x,key)).join(", ")||"—";
+  if(typeof v==="object")return "";
+  if(typeof v==="string"&&LOOKUP.has(v))return LOOKUP.get(v).displayName;
+  if(typeof v==="boolean")return v?"Yes":"No";
+  return String(v);
+}
+function keyLike(sample,re){return Object.keys(sample||{}).find(k=>re.test(k));}
+
+let F={};
+function detectFields(animals){
+  const s=animals[0]||{};
+  const keys=Object.keys(s);
+  const hasValues=key=>key&&animals.some(a=>{const v=a[key];return v!==null&&v!==undefined&&v!=="";});
+  // TAG: prefer exact-ish tag fields that actually hold values, then shortest tag-like field, then an id
+  const tagK=["tag","eartag","earTag","tagNumber","officialTag","officialTagNumber","nationalId","number"].find(hasValues)
+    || keys.filter(k=>/tag|ear|official|nationalid|^number$/i.test(k)).sort((a,b)=>a.length-b.length).find(hasValues)
+    || keyLike(s,/^id$/i);
+  let nameK=keyLike(s,/^name$|herdname|petname/i);
+  if(!hasValues(nameK)) nameK=null;   // an all-null name field shouldn't headline rows
+  F={tag:tagK,name:nameK,
+     sex:keyLike(s,/sex|gender/i),
+     breed:keyLike(s,/^breed(id)?$/i),
+     dob:keyLike(s,/dob|dateofbirth|birth/i),
+     status:keyLike(s,/status|onfarm|state|disposal/i),
+     mob:keyLike(s,/mob/i)};
+}
+function tagOf(item){const v=F.tag?item[F.tag]:undefined;return (v===null||v===undefined||v==="")?(item.id||"—"):v;}
+
+function ingest(objs){
+  const merged={};
+  for(const o of objs){
+    const e=(o&&o.entities)?o.entities:o;
+    if(!e||typeof e!=="object")continue;
+    for(const [k,v] of Object.entries(e)) if(Array.isArray(v)) merged[k]=(merged[k]||[]).concat(v);
+  }
+  if(!merged.animals&&!merged.system_type) throw new Error("No herd entities found — is this a farmdata.json from the API?");
+  LOOKUP=new Map();
+  for(const t of (merged.system_type||[])) if(t&&t.id&&!LOOKUP.has(t.id)) LOOKUP.set(t.id,{displayName:t.displayName||t.id,type:t.type});
+  DATA=merged;
+  if(DATA.animals) detectFields(DATA.animals);
+  bootUI();
+}
+
+/* ---------- live API ---------- */
+function post(path,extra){
+  const base={source:"farmer",country:CFG.country,countryCode:CFG.country,region:CFG.country,
+    deviceType:"ios",dbAdapter:"sqlite",version:CFG.version,codeVersion:CFG.version,appVersion:CFG.version,deviceId:CFG.deviceId};
+  return fetch(`https://${CFG.host}/${path}`,{method:"POST",credentials:"omit",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign(base,extra||{}))})
+    .then(async r=>{let j;try{j=await r.json();}catch(e){throw new Error(`HTTP ${r.status} — non-JSON response`);}
+      if(j&&j.error)throw new Error(j.error);
+      if(r.status>=400)throw new Error(`HTTP ${r.status}`);return j;});
+}
+function login(creds){
+  return fetch(`https://${CFG.host}/tlogin`,{method:"POST",credentials:"omit",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:creds.username,password:creds.password,countryCode:CFG.country,country:CFG.country,
+      language:"en",version:CFG.version,codeVersion:CFG.version,appVersion:CFG.version,deviceType:"ios"})})
+    .then(async r=>{const j=await r.json().catch(()=>({}));if(!j.url_token)throw new Error(j.error||`Login failed (HTTP ${r.status})`);return j.url_token;});
+}
+async function sync(){
+  const boot=await post("api/2/",{HWKEY:CFG.token});
+  const farm=boot.farmIds&&boot.farmIds[0]&&boot.farmIds[0].id;
+  if(!farm)throw new Error("No farm found on this account");
+  CFG.farm=farm;CFG.profile=boot;
+  const ref =await post("api/2/get",{HWKEY:CFG.token,farm,system_type:true, lastSync:0});
+  const data=await post("api/2/get",{HWKEY:CFG.token,farm,system_type:false,lastSync:0});
+  ingest([ref,data]);
+}
+async function connect(creds){
+  CFG.deviceId=CFG.deviceId||("cli-"+((crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(16).slice(2)));
+  CFG.creds=creds;CFG.live=true;
+  CFG.token=await login(creds);
+  await sync();
+}
+async function refresh(){
+  try{await sync();}
+  catch(e){ if(CFG.creds){CFG.token=await login(CFG.creds);await sync();} else throw e; }
+}
+
+/* ---------- UI ---------- */
+const TAB_ORDER=["animals","tasks","mobs","paddocks"];
+const TAB_LABEL={animals:"Animals",tasks:"Tasks",mobs:"Mobs",paddocks:"Paddocks"};
+
+function bootUI(){
+  $("#loader").classList.add("hidden");
+  $("#app").classList.remove("hidden");
+  const p=CFG.profile, farm=p&&p.farmIds&&p.farmIds[0];
+  $("#farmName").textContent=(farm&&farm.farmName)?farm.farmName:((farm&&(farm.firstname||farm.lastname))?`${farm.firstname||""} ${farm.lastname||""}`.trim():"Herd");
+  $("#herdNo").textContent=farm&&farm.herdNumber?farm.herdNumber:"";
+  $("#refresh").classList.toggle("hidden",!CFG.live);
+
+  const present=TAB_ORDER.filter(t=>DATA[t]&&DATA[t].length);
+  const extra=Object.keys(DATA).filter(k=>!TAB_ORDER.includes(k)&&k!=="system_type"&&DATA[k].length);
+  const tabs=present.concat(extra);
+  const nav=$("#tabs");nav.innerHTML="";
+  tabs.forEach(t=>{
+    const b=document.createElement("button");
+    b.innerHTML=(TAB_LABEL[t]||humanize(t))+` <span class="n">${DATA[t].length}</span>`;
+    b.onclick=()=>{STATE.tab=t;STATE.q="";STATE.filters={};STATE.selected=null;$("#q").value="";render();};
+    b.dataset.tab=t;nav.appendChild(b);
+  });
+  STATE.tab=tabs[0];render();
+}
+
+function facets(){
+  if(STATE.tab!=="animals")return [];
+  const out=[];
+  const add=field=>{if(!field)return;[...new Set(DATA.animals.map(a=>a[field]).filter(v=>v!==undefined&&v!==""&&v!==null))].forEach(v=>out.push({field,val:v,label:disp(v,field)}));};
+  add(F.sex);add(F.status);
+  return out;
+}
+function matchRow(item){
+  if(STATE.q){
+    const q=STATE.q.toLowerCase();
+    const hay=Object.values(item).map(v=>{if(v&&typeof v==="object")return "";return (String(v)+" "+disp(v)).toLowerCase();}).join(" ");
+    if(!hay.includes(q))return false;
+  }
+  for(const [field,val] of Object.entries(STATE.filters)) if(item[field]!==val)return false;
+  return true;
+}
+function render(){
+  [...$("#tabs").children].forEach(b=>b.classList.toggle("on",b.dataset.tab===STATE.tab));
+  const chipWrap=$("#chips");chipWrap.innerHTML="";
+  const fc=facets();
+  if(fc.length){chipWrap.style.display="flex";
+    fc.forEach(f=>{const c=document.createElement("button");c.className="chip"+(STATE.filters[f.field]===f.val?" on":"");c.textContent=f.label;
+      c.onclick=()=>{if(STATE.filters[f.field]===f.val)delete STATE.filters[f.field];else STATE.filters[f.field]=f.val;render();};chipWrap.appendChild(c);});
+  }else chipWrap.style.display="none";
+
+  const items=(DATA[STATE.tab]||[]).filter(matchRow);
+  $("#count").textContent=`${items.length} of ${DATA[STATE.tab].length}`;
+  const rows=$("#rows");rows.innerHTML="";
+  items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item));
+    b.onclick=()=>{STATE.selected=item;document.body.classList.add("mobiledetail");render();};rows.appendChild(b);});
+  renderDetail();
+}
+function rowContent(item){
+  const frag=document.createElement("div");
+  if(STATE.tab==="animals"){
+    const tag=tagOf(item);
+    const nm=F.name&&item[F.name]?`<span class="nm">${esc(item[F.name])}</span>`:"";
+    const bits=[];
+    if(F.sex&&item[F.sex])bits.push(esc(disp(item[F.sex])));
+    if(F.breed&&item[F.breed])bits.push(esc(disp(item[F.breed])));
+    if(F.dob&&epochMs(item[F.dob])!==null){const ms=epochMs(item[F.dob]);bits.push(`${fmtDate(ms)} · ${ageFrom(ms)}`);}
+    if(F.status&&item[F.status])bits.push(esc(disp(item[F.status])));
+    frag.innerHTML=`<div><span class="tag">${esc(String(tag))}</span>${nm}</div><div class="meta">${bits.map(x=>`<span>${x}</span>`).join("")}</div>`;
+  }else if(STATE.tab==="tasks"){
+    const titleK=keyLike(item,/title|name|desc/i)||"id",dueK=keyLike(item,/due|date/i),statusK=keyLike(item,/status|state/i);
+    const dueMs=dueK?epochMs(item[dueK]):null;
+    const overdue=dueMs!==null&&dueMs<now&&!/done|closed|complete/i.test(disp(item[statusK]||""));
+    const meta=[];
+    if(dueMs!==null)meta.push(`<span class="${overdue?"alert":""}">${overdue?"Overdue · ":""}${fmtDate(dueMs)}</span>`);
+    if(statusK&&item[statusK])meta.push(`<span>${esc(disp(item[statusK]))}</span>`);
+    frag.innerHTML=`<div><span class="nm">${esc(disp(item[titleK]))}</span></div><div class="meta">${meta.join("")}</div>`;
+  }else{
+    const nameK=keyLike(item,/name|title/i)||"id";
+    const rest=Object.keys(item).filter(k=>k!==nameK&&k!=="id"&&typeof item[k]!=="object").slice(0,2);
+    frag.innerHTML=`<div><span class="nm">${esc(disp(item[nameK]))}</span></div><div class="meta">${rest.map(k=>`<span>${esc(humanize(k))}: ${esc(disp(item[k],k))}</span>`).join("")}</div>`;
+  }
+  return frag;
+}
+function renderDetail(){
+  const host=$("#detail"),item=STATE.selected;
+  if(!item){host.innerHTML=`<div class="empty"><p>Select ${STATE.tab==="animals"?"an animal":"an item"} to see its full record.</p></div>`;return;}
+  let head="";
+  if(STATE.tab==="animals"){
+    const tag=tagOf(item);
+    const badges=[];
+    if(F.status&&item[F.status])badges.push(`<span class="badge">${esc(disp(item[F.status]))}</span>`);
+    if(F.breed&&item[F.breed])badges.push(`<span class="badge">${esc(disp(item[F.breed]))}</span>`);
+    if(F.dob&&epochMs(item[F.dob])!==null)badges.push(`<span class="badge">${ageFrom(epochMs(item[F.dob]))}</span>`);
+    head=`<div class="dhead"><div class="tag">${esc(String(tag))}</div>${F.name&&item[F.name]?`<div class="nm">${esc(item[F.name])}</div>`:""}<div class="badges">${badges.join("")}</div></div>`;
+  }else{
+    const nameK=keyLike(item,/name|title/i)||"id";
+    head=`<div class="dhead"><div class="tag" style="font-family:var(--sans);font-size:18px">${esc(disp(item[nameK]))}</div></div>`;
+  }
+  const keys=Object.keys(item);
+  const priNames=["tag","name","species","sex","breed","dob","status","milkingStatus","mob",
+    "lastCalvingDate","estCalvingDate","dryOffDate","lastServeDate","lastTreatedDate","notes"];
+  const pri=(STATE.tab==="animals"?[F.tag,F.name,F.sex,F.breed,F.dob,F.status,F.mob].filter(Boolean).concat(priNames):[])
+    .filter((k,i,a)=>k&&keys.includes(k)&&a.indexOf(k)===i);
+  const ordered=pri.concat(keys.filter(k=>!pri.includes(k)));
+  const isEmpty=v=>v===null||v===undefined||v===""||(Array.isArray(v)&&!v.length);
+  let rows="";
+  for(const k of ordered){
+    if(k==="id"&&STATE.tab==="animals"&&F.tag&&F.tag!=="id")continue;
+    const v=item[k];
+    const empty=isEmpty(v);
+    if(v&&typeof v==="object"&&epochMs(v)===null){
+      const inner=Object.entries(v).map(([ik,iv])=>`${humanize(ik)}: ${esc(disp(iv,ik))}`).join("; ");
+      rows+=kvRow(humanize(k),inner||"—",false,empty);continue;
+    }
+    const isTagLike=/tag|ear|^id$|number/i.test(k)&&epochMs(v)===null;
+    rows+=kvRow(humanize(k),esc(disp(v,k)),isTagLike&&typeof v!=="object",empty);
+  }
+  const toggle=`<label class="showall"><input type="checkbox" id="showAll" ${STATE.showAll?"checked":""}> Show empty fields</label>`;
+  host.innerHTML=head+toggle+`<dl class="${STATE.showAll?"":"hide-empty"}">${rows}</dl><div style="height:24px"></div>`;
+  const cb=$("#showAll");if(cb)cb.addEventListener("change",e=>{STATE.showAll=e.target.checked;renderDetail();});
+}
+function kvRow(k,v,mono,empty){return `<div class="kv${empty?" empty":""}"><dt>${k}</dt><dd class="${mono?"mono":""}">${v}</dd></div>`;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ---------- events ---------- */
+$("#q").addEventListener("input",e=>{STATE.q=e.target.value.trim();STATE.selected=null;document.body.classList.remove("mobiledetail");render();});
+$("#back").addEventListener("click",()=>{STATE.selected=null;document.body.classList.remove("mobiledetail");render();});
+
+$("#mConnect").addEventListener("click",()=>{$("#mConnect").classList.add("on");$("#mFile").classList.remove("on");$("#connectPanel").classList.remove("hidden");$("#filePanel").classList.add("hidden");});
+$("#mFile").addEventListener("click",()=>{$("#mFile").classList.add("on");$("#mConnect").classList.remove("on");$("#filePanel").classList.remove("hidden");$("#connectPanel").classList.add("hidden");});
+
+function readCfgFromForm(){CFG.host=$("#cHost").value.trim()||CFG.host;CFG.country=($("#cCountry").value.trim()||"IE").toUpperCase();CFG.version=$("#cVer").value.trim()||CFG.version;}
+async function runConnect(creds){
+  $("#connErr").textContent="";
+  const btns=[$("#doConnect"),$("#useDemo")];btns.forEach(b=>b.disabled=true);
+  const prev=$("#doConnect").textContent;$("#doConnect").textContent="Connecting…";
+  try{ readCfgFromForm(); await connect(creds); }
+  catch(err){
+    const cors=(err&&(err.name==="TypeError"||/load failed|failed to fetch|networkerror/i.test(err.message)));
+    $("#connErr").textContent=cors
+      ? "The browser couldn't reach the API — likely CORS. It works over curl, so a small hosted proxy fixes it; paste this to Claude."
+      : (err.message||"Connection failed");
+  }finally{ btns.forEach(b=>b.disabled=false);$("#doConnect").textContent=prev; }
+}
+$("#doConnect").addEventListener("click",()=>{
+  const u=$("#cUser").value.trim(),p=$("#cPass").value;
+  if(!u||!p){$("#connErr").textContent="Enter your phone number and password.";return;}
+  runConnect({username:u,password:p});
+});
+$("#useDemo").addEventListener("click",()=>{
+  $("#cHost").value="mcie-prod.hwbe.io";$("#cCountry").value="IE";$("#cVer").value="9.9.28";
+  runConnect({username:"0861234567",password:"demo1234"});
+});
+
+$("#refresh").addEventListener("click",async()=>{
+  const b=$("#refresh");b.disabled=true;const t=b.textContent;b.textContent="Refreshing…";
+  const sel=STATE.selected;
+  try{ await refresh(); if(sel){/* selection object is replaced after re-ingest */} }
+  catch(err){ alert("Refresh failed: "+(err.message||err)); }
+  finally{ b.disabled=false;b.textContent=t; }
+});
+
+/* file mode */
+function loadFiles(fileList){
+  $("#loaderr").textContent="";
+  const files=[...fileList].filter(f=>/\.json$/i.test(f.name));
+  if(!files.length){$("#loaderr").textContent="Please choose .json files.";return;}
+  Promise.all(files.map(f=>f.text().then(JSON.parse))).then(ingest).catch(err=>{$("#loaderr").textContent="Couldn't read that: "+err.message;});
+}
+$("#file").addEventListener("change",e=>loadFiles(e.target.files));
+const drop=$("#drop");
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("hot");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("hot");}));
+drop.addEventListener("drop",e=>loadFiles(e.dataTransfer.files));
+
+/* register service worker when hosted (https or localhost) for offline install */
+(function(){
+  if(!("serviceWorker" in navigator))return;
+  var ok=location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+  if(!ok)return;
+  try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){}
+})();
+
+/* auto-load JSON if hosted next to the file */
+Promise.all([
+  fetch("./farmdata.json").then(r=>r.ok?r.json():Promise.reject()),
+  fetch("./reference.json").then(r=>r.ok?r.json():null).catch(()=>null),
+]).then(([fd,ref])=>ingest(ref?[fd,ref]:[fd])).catch(()=>{});
+</script>
+<div id="chat">
+  <div class="chead">
+    <h2>Ask about the herd</h2>
+    <div class="sp">
+      <button class="iconbtn" id="chatSettingsBtn" title="Settings">⚙</button>
+      <button class="iconbtn" id="chatClose" title="Close">✕</button>
+    </div>
+  </div>
+  <div class="csettings" id="chatSettings">
+    <label>Anthropic API key<input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+    <label>Model
+      <select id="modelSel">
+        <option value="claude-sonnet-5">Sonnet 5 — balanced (default)</option>
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5 — fastest, cheapest</option>
+        <option value="claude-opus-5">Opus 5 — most capable</option>
+      </select>
+    </label>
+    <label>API endpoint (advanced — point at a proxy to keep your key off the device)<input id="endpointInp" placeholder="https://api.anthropic.com/v1/messages"></label>
+    <p class="hint" style="margin:0">Your key stays in memory and isn't saved. Requests are billed to your Anthropic account. Herd data stays on this device — only your questions and small results are sent.</p>
+  </div>
+  <div class="cmsgs" id="chatMsgs"></div>
+  <div class="suggest" id="chatSuggest"></div>
+  <div class="ccompose">
+    <textarea id="chatInput" rows="1" placeholder="Ask about the herd…"></textarea>
+    <button id="chatSend">Send</button>
+  </div>
+</div>
+
+<style>
+  .askbtn{margin-left:auto;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:999px;padding:6px 15px;font-size:13px;font-weight:650}
+  #chat{position:fixed;inset:0;background:var(--paper);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;z-index:50}
+  #chat.open{transform:none}
+  @media(min-width:760px){#chat{left:auto;width:440px;border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.08)}}
+  .chead{display:flex;align-items:center;gap:10px;padding:max(env(safe-area-inset-top),12px) 14px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+  .chead h2{font-size:16px;margin:0;font-weight:650}
+  .chead .sp{margin-left:auto;display:flex;gap:6px}
+  .iconbtn{border:1px solid var(--line);background:var(--paper);border-radius:8px;width:34px;height:34px;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .cmsgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .bubble{max-width:86%;padding:10px 13px;border-radius:14px;font-size:14.5px;line-height:1.45;word-wrap:break-word}
+  .bubble.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+  .bubble.assistant{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .bubble.thinking{color:var(--muted)}
+  .bubble.err{align-self:flex-start;background:#F3E1DC;border:1px solid #E4C4BC;color:var(--alert)}
+  .bubble.chart{align-self:stretch;max-width:100%;background:var(--card);border:1px solid var(--line)}
+  .bubble.chart .ct{font-size:13px;font-weight:650;margin-bottom:8px}
+  .ccompose{display:flex;gap:8px;padding:10px 12px max(env(safe-area-inset-bottom),12px);border-top:1px solid var(--line);background:var(--card)}
+  .ccompose textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;max-height:120px;background:var(--paper);color:var(--ink)}
+  .ccompose textarea:focus{outline:none;border-color:var(--accent)}
+  .ccompose button{border:none;background:var(--accent);color:#fff;border-radius:12px;padding:0 16px;font-weight:650;cursor:pointer}
+  .csettings{padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card);display:none;flex-direction:column;gap:8px}
+  .csettings.open{display:flex}
+  .csettings label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  .csettings input,.csettings select{padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:var(--paper);color:var(--ink)}
+  .suggest{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 8px}
+  .suggest button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 11px;font-size:12.5px;color:var(--accent);cursor:pointer}
+</style>
+
+<script>
+"use strict";
+/* ===== LLM chat: reuses DATA, LOOKUP, F, disp, epochMs, tagOf, esc, $, now, CFG from the main script ===== */
+CFG.apiKey=""; CFG.model="claude-sonnet-5"; CFG.llmEndpoint="https://api.anthropic.com/v1/messages";
+const chatState={open:false,briefed:false,busy:false,msgs:[]};
+
+/* ---- local query engine over the loaded herd ---- */
+function getNum(a,field){
+  if(field==="ageYears"||field==="age"||field==="ageMonths"){
+    const ms=F.dob?epochMs(a[F.dob]):null; if(ms===null)return null;
+    const yrs=(now-ms)/(365.25*86400000); return field==="ageMonths"?yrs*12:yrs;
+  }
+  const v=a[field]; const ms=epochMs(v); if(ms!==null)return ms;
+  const n=Number(v); return isNaN(n)?null:n;
+}
+function resolve(v){return (typeof v==="string"&&LOOKUP.has(v))?LOOKUP.get(v).displayName:v;}
+function animalMatches(a,where){
+  return (where||[]).every(c=>{
+    const ageF=(c.field==="ageYears"||c.field==="ageMonths"||c.field==="age");
+    const raw=ageF?getNum(a,c.field):a[c.field];
+    const rv=resolve(raw);
+    const lc=x=>String(x==null?"":x).toLowerCase();
+    switch(c.op){
+      case "=": return raw===c.value||lc(raw)===lc(c.value)||lc(rv)===lc(c.value);
+      case "!=": return !(raw===c.value||lc(raw)===lc(c.value)||lc(rv)===lc(c.value));
+      case ">": return getNum(a,c.field)>Number(c.value);
+      case ">=": return getNum(a,c.field)>=Number(c.value);
+      case "<": return getNum(a,c.field)<Number(c.value);
+      case "<=": return getNum(a,c.field)<=Number(c.value);
+      case "contains": return lc(rv).includes(lc(c.value));
+      case "empty": return raw==null||raw==="";
+      case "notempty": return !(raw==null||raw==="");
+      default: return true;
+    }
+  });
+}
+function aggValue(arr,m){
+  if(!m||m.op==="count")return arr.length;
+  const ns=arr.map(a=>getNum(a,m.field)).filter(n=>n!=null&&!isNaN(n));
+  if(!ns.length)return 0;
+  const sum=ns.reduce((s,x)=>s+x,0);
+  if(m.op==="avg")return Math.round(sum/ns.length*100)/100;
+  if(m.op==="sum")return Math.round(sum*100)/100;
+  if(m.op==="min")return Math.min(...ns);
+  if(m.op==="max")return Math.max(...ns);
+  return arr.length;
+}
+function runQuery(q){
+  q=q||{};
+  const entity=(q.entity&&DATA[q.entity])?q.entity:"animals";
+  const rows=(DATA[entity]||[]).filter(a=>animalMatches(a,q.where));
+  if(q.groupBy){
+    const g={};
+    rows.forEach(a=>{const k=(()=>{const kv=resolve(a[q.groupBy]);return (kv==null||kv==="")?"—":String(kv);})();(g[k]=g[k]||[]).push(a);});
+    const m=q.metric||{op:"count"};
+    const groups=Object.entries(g).map(([k,arr])=>({group:k,value:aggValue(arr,m)})).sort((x,y)=>y.value-x.value);
+    return {entity,groupBy:q.groupBy,metric:m.op||"count",total:rows.length,groups};
+  }
+  if(q.metric&&q.metric.op&&q.metric.op!=="count"){const o={entity,matched:rows.length};o[q.metric.op+"_"+(q.metric.field||"")]=aggValue(rows,q.metric);return o;}
+  return {entity,matched:rows.length,sample:rows.slice(0,25).map(a=>tagOf(a))};
+}
+
+/* ---- charts (self-contained SVG) ---- */
+const PIE=["#2F6B34","#7BA05B","#C68A26","#A5402A","#4E7C8A","#8C6BA0","#B0B44B","#6B7266"];
+function chartSVG(type,series){
+  series=(series||[]).filter(s=>s&&s.value!=null);
+  if(!series.length) return `<div style="color:var(--muted);font-size:13px">No data to plot.</div>`;
+  if(type==="pie") return pieSVG(series);
+  if(type==="line") return lineSVG(series);
+  return barSVG(series);
+}
+function barSVG(series){
+  series=series.slice(0,16);
+  const rowH=28,pad=6,W=460,labelW=150,valW=48,barW=W-labelW-valW;
+  const max=Math.max(1,...series.map(s=>Number(s.value)||0));
+  const H=series.length*rowH+pad*2;
+  const bars=series.map((s,i)=>{
+    const y=pad+i*rowH,w=Math.max(2,barW*(Number(s.value)||0)/max);
+    return `<text x="${labelW-8}" y="${y+rowH/2}" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1A1E16">${esc(clip(s.label,20))}</text>`
+      +`<rect x="${labelW}" y="${y+5}" width="${w.toFixed(1)}" height="${rowH-10}" rx="3" fill="#2F6B34"/>`
+      +`<text x="${labelW+w+6}" y="${y+rowH/2}" dominant-baseline="middle" font-size="12" fill="#6B7266">${esc(s.value)}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img">${bars}</svg>`;
+}
+function pieSVG(series){
+  series=series.slice(0,8);
+  const total=series.reduce((s,x)=>s+(Number(x.value)||0),0)||1;
+  const cx=90,cy=90,r=82; let a0=-Math.PI/2;
+  const arcs=series.map((s,i)=>{
+    const frac=(Number(s.value)||0)/total,a1=a0+frac*2*Math.PI;
+    const x0=cx+r*Math.cos(a0),y0=cy+r*Math.sin(a0),x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+    const large=frac>0.5?1:0;
+    const p=`M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${large} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z`;
+    a0=a1; return `<path d="${p}" fill="${PIE[i%PIE.length]}"/>`;
+  }).join("");
+  const legend=series.map((s,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:10px;height:10px;border-radius:2px;background:${PIE[i%PIE.length]};display:inline-block"></span>${esc(clip(s.label,22))} <span style="color:var(--muted)">${esc(s.value)}</span></div>`).join("");
+  return `<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg viewBox="0 0 180 180" width="170" height="170">${arcs}</svg><div style="display:flex;flex-direction:column;gap:4px">${legend}</div></div>`;
+}
+function lineSVG(series){
+  series=series.slice(0,40);
+  const W=460,H=200,pad=28;
+  const vals=series.map(s=>Number(s.value)||0),max=Math.max(1,...vals),min=Math.min(0,...vals);
+  const x=i=>pad+(W-pad*2)*(series.length<2?0:i/(series.length-1));
+  const y=v=>H-pad-(H-pad*2)*((v-min)/(max-min||1));
+  const pts=series.map((s,i)=>`${x(i).toFixed(1)},${y(vals[i]).toFixed(1)}`).join(" ");
+  const dots=series.map((s,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(vals[i]).toFixed(1)}" r="3" fill="#2F6B34"/>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%"><polyline points="${pts}" fill="none" stroke="#2F6B34" stroke-width="2"/>${dots}</svg>`;
+}
+function clip(s,n){s=String(s);return s.length>n?s.slice(0,n-1)+"…":s;}
+
+/* ---- tools exposed to Claude ---- */
+function buildTools(){
+  const entities=Object.keys(DATA).filter(k=>k!=="system_type");
+  return [
+    {name:"query_herd",description:"Query the herd for exact counts, filtered lists, group breakdowns, or aggregates. Always use this for numbers — never estimate. Coded fields (breed, sex, status, milkingStatus, species) accept either the code or the plain name as a value.",
+     input_schema:{type:"object",properties:{
+       entity:{type:"string",description:"Dataset to query. Default 'animals'. Available: "+entities.join(", ")},
+       where:{type:"array",description:"Filters, all AND-ed.",items:{type:"object",properties:{field:{type:"string"},op:{type:"string",enum:["=","!=",">",">=","<","<=","contains","empty","notempty"]},value:{}},required:["field","op"]}},
+       groupBy:{type:"string",description:"Field to break the count down by."},
+       metric:{type:"object",description:"Aggregate instead of count.",properties:{op:{type:"string",enum:["count","avg","sum","min","max"]},field:{type:"string"}}}
+     }}},
+    {name:"make_chart",description:"Render a chart in the chat. Give a query with groupBy (and optional where/metric); the app computes real values from the herd and draws it.",
+     input_schema:{type:"object",required:["title","type"],properties:{
+       title:{type:"string"},
+       type:{type:"string",enum:["bar","pie","line"]},
+       query:{type:"object",properties:{entity:{type:"string"},where:{type:"array",items:{type:"object"}},groupBy:{type:"string"},metric:{type:"object"}}}
+     }}}
+  ];
+}
+function runTool(name,input){
+  try{
+    if(name==="query_herd") return runQuery(input);
+    if(name==="make_chart"){
+      const q=input.query||{};
+      if(!q.groupBy && !input.data) return {error:"make_chart needs query.groupBy"};
+      const series=input.data||(runQuery(q).groups||[]).map(x=>({label:x.group,value:x.value}));
+      renderChartBubble(input.title||"Chart",input.type||"bar",series);
+      return {rendered:true,title:input.title,points:series.slice(0,20)};
+    }
+    return {error:"unknown tool "+name};
+  }catch(e){return {error:String(e&&e.message||e)};}
+}
+
+/* ---- system prompt from the loaded data ---- */
+function buildSystem(){
+  const a=DATA.animals||[]; const s=a[0]||{}; const keys=Object.keys(s);
+  const dateFields=keys.filter(k=>a.some(x=>epochMs(x[k])!==null));
+  const enumFields=keys.filter(k=>a.some(x=>typeof x[k]==="string"&&LOOKUP.has(x[k])));
+  const species=[...new Set(a.map(x=>resolve(x.species)).filter(Boolean))].join(", ")||"livestock";
+  return [
+    `You are a practical livestock herd assistant embedded in a farmer's records app. Today is ${new Date(now).toDateString()}.`,
+    `The herd has ${a.length} animals (${species}). Other datasets: ${Object.keys(DATA).filter(k=>k!=="system_type"&&k!=="animals").join(", ")||"none"}.`,
+    `Animal fields: ${keys.join(", ")}.`,
+    `Date fields (epoch ms): ${dateFields.join(", ")||"none"}. Coded fields resolved to plain names: ${enumFields.join(", ")||"none"}.`,
+    `Derived numeric fields you can filter or aggregate: ageYears, ageMonths (from ${F.dob||"date of birth"}).`,
+    `Use query_herd for every number — do not guess counts. Use make_chart for distributions and comparisons. Refer to animals by their ${F.tag||"tag"}. Resolve codes to plain names in your replies.`,
+    `Be concise and useful to a working farmer: lead with anything needing action (overdue tasks, breeding/health gaps, ageing stock), then the rest. Keep replies short.`
+  ].join(" ");
+}
+
+/* ---- API call (Anthropic messages, browser-direct or via proxy) ---- */
+async function callAPI(msgs){
+  if(!CFG.apiKey) throw new Error("Add your Anthropic API key in settings (the ⚙ button) to use chat.");
+  const body={model:CFG.model||"claude-sonnet-5",max_tokens:1500,system:buildSystem(),tools:buildTools(),messages:msgs};
+  const r=await fetch(CFG.llmEndpoint||"https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-api-key":CFG.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok){let t="";try{t=await r.text();}catch(e){}throw new Error(`API ${r.status}. ${clip(t,160)}`);}
+  return r.json();
+}
+
+/* ---- conversation loop with tool use ---- */
+async function llmTurn(){
+  if(chatState.busy)return; chatState.busy=true;
+  const think=addBubble("assistant thinking","Thinking…");
+  let removed=false;
+  try{
+    let guard=0;
+    while(guard++<6){
+      const data=await callAPI(chatState.msgs);
+      if(!removed){think.remove();removed=true;}
+      chatState.msgs.push({role:"assistant",content:data.content});
+      for(const b of data.content){ if(b.type==="text"&&b.text.trim()) addBubble("assistant",mdLite(b.text)); }
+      const tools=data.content.filter(b=>b.type==="tool_use");
+      if(!tools.length||data.stop_reason!=="tool_use")break;
+      const results=tools.map(tu=>({type:"tool_result",tool_use_id:tu.id,content:JSON.stringify(runTool(tu.name,tu.input))}));
+      chatState.msgs.push({role:"user",content:results});
+    }
+  }catch(e){ if(!removed)think.remove(); addBubble("err",esc(e.message||String(e))); }
+  finally{ chatState.busy=false; }
+}
+
+/* ---- rendering ---- */
+function addBubble(cls,html){const d=document.createElement("div");d.className="bubble "+cls;d.innerHTML=html;const m=$("#chatMsgs");m.appendChild(d);m.scrollTop=m.scrollHeight;return d;}
+function renderChartBubble(title,type,series){addBubble("chart",`<div class="ct">${esc(title)}</div>${chartSVG(type,series)}`);}
+function mdLite(t){return esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*[-*]\s+/gm,"• ").replace(/\n/g,"<br>");}
+
+function send(text){
+  text=(text||"").trim(); if(!text||chatState.busy)return;
+  if(!CFG.apiKey){ openSettings(true); addBubble("assistant","Add your Anthropic API key above first — it stays on this device."); return; }
+  addBubble("user",esc(text));
+  chatState.msgs.push({role:"user",content:text});
+  llmTurn();
+}
+function briefing(){
+  if(chatState.briefed||!CFG.apiKey||!(DATA.animals&&DATA.animals.length))return;
+  chatState.briefed=true;
+  addBubble("user",esc("Brief me on the herd"));
+  chatState.msgs.push({role:"user",content:"Give me a short opening briefing on the herd: its size and makeup, and the 3–5 things most worth my attention right now. Use tools for exact numbers and include one chart if it helps."});
+  llmTurn();
+}
+
+/* ---- settings + open/close ---- */
+function openSettings(on){$("#chatSettings").classList.toggle("open",on!==undefined?on:!$("#chatSettings").classList.contains("open"));}
+function openChat(){
+  $("#chat").classList.add("open"); chatState.open=true;
+  if(!CFG.apiKey){ openSettings(true); if(!$("#chatMsgs").children.length) addBubble("assistant","Hi — add your Anthropic API key above and I'll brief you on the herd and answer questions. Your data stays on this device."); }
+  else briefing();
+}
+const SUGGEST=["Anything I should act on?","Breed breakdown chart","Which cows are dry?","Oldest 5 animals","Ages by breed"];
+
+/* ---- wire up ---- */
+(function(){
+  $("#askBtn").addEventListener("click",openChat);
+  $("#chatClose").addEventListener("click",()=>{$("#chat").classList.remove("open");chatState.open=false;});
+  $("#chatSettingsBtn").addEventListener("click",()=>openSettings());
+  $("#apiKey").addEventListener("input",e=>{CFG.apiKey=e.target.value.trim();});
+  $("#modelSel").addEventListener("change",e=>{CFG.model=e.target.value;});
+  $("#endpointInp").addEventListener("input",e=>{CFG.llmEndpoint=e.target.value.trim()||"https://api.anthropic.com/v1/messages";});
+  const inp=$("#chatInput");
+  inp.addEventListener("input",()=>{inp.style.height="auto";inp.style.height=Math.min(120,inp.scrollHeight)+"px";});
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();const v=inp.value;inp.value="";inp.style.height="auto";send(v);}});
+  $("#chatSend").addEventListener("click",()=>{const v=inp.value;inp.value="";inp.style.height="auto";send(v);});
+  const sg=$("#chatSuggest"); SUGGEST.forEach(s=>{const b=document.createElement("button");b.textContent=s;b.addEventListener("click",()=>send(s));sg.appendChild(b);});
+})();
+</script>
+</body>
+</html>
