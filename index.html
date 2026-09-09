@@ -147,34 +147,34 @@
 </div>
 
 <style>
-  /* app shell: sidebar (desktop) + bottom tab bar (mobile) */
-  #app{display:flex;flex-direction:column;flex:1;min-height:0}
-  #side{display:none}
+  /* app shell: conversation-first, with a slide-in drawer for secondary screens */
+  #app{display:flex;flex-direction:column;flex:1;min-height:0;position:relative}
   #stage{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
-  .view{display:none;flex:1;min-height:0;flex-direction:column}
-  .view.on{display:flex}
-  .topbar{display:flex;align-items:center;gap:10px;padding:max(env(safe-area-inset-top),11px) 15px 11px;background:var(--card);border-bottom:1px solid var(--line);flex:none}
-  .topbar .tbtitle{font-size:18px;font-weight:650;letter-spacing:-.01em}
-  .topbar .sp{margin-left:auto;display:flex;gap:8px}
-  .iconbtn2{border:1px solid var(--line);background:var(--paper);border-radius:9px;width:36px;height:36px;font-size:17px;color:var(--accent);cursor:pointer}
-  #bottomnav{display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px max(env(safe-area-inset-bottom),6px);flex:none;z-index:20}
-  .navitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--muted);font-size:11px;font-weight:600;padding:5px 2px;cursor:pointer}
-  .navitem.on{color:var(--accent)}
-  .navitem svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  @media(min-width:860px){
-    #app{flex-direction:row}
-    #side{display:flex;flex-direction:column;width:238px;flex:none;border-right:1px solid var(--line);background:var(--card);padding:18px 12px;gap:14px}
-    #bottomnav{display:none}
-    .topbar{display:none}
-    .sideid .idname{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
-    .sideid .idno{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
-    #sidenav{display:flex;flex-direction:column;gap:2px}
-    #sidenav .navitem{flex-direction:row;justify-content:flex-start;gap:11px;font-size:15px;padding:10px 12px;border-radius:10px}
-    #sidenav .navitem.on{background:var(--accent-weak)}
-    #sidenav .navitem svg{width:20px;height:20px}
-    .sidefoot{margin-top:auto}
-    .ghostbtn{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px;font-weight:600;color:var(--accent);cursor:pointer}
-  }
+  .screen{display:none;flex:1;min-height:0;flex-direction:column}
+  .screen.on{display:flex}
+  .topbar{display:flex;align-items:center;gap:8px;padding:max(env(safe-area-inset-top),11px) 12px 11px;background:var(--card);border-bottom:1px solid var(--line);flex:none}
+  .topbar .tbtitle{font-size:18px;font-weight:700;letter-spacing:-.01em;margin:0 auto}
+  .topbar .sp{display:flex;gap:6px}
+  .iconbtn2{border:1px solid var(--line);background:var(--paper);border-radius:9px;width:38px;height:38px;font-size:16px;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+  .iconbtn2 svg{width:20px;height:20px}
+  /* drawer + scrim */
+  #drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,84vw);background:var(--card);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;padding:max(env(safe-area-inset-top),16px) 12px 16px;gap:2px;z-index:60;
+    transform:translateX(-102%);transition:transform .24s cubic-bezier(.2,.8,.2,1);overflow-y:auto}
+  #drawer.open{transform:none}
+  #drawerScrim{position:fixed;inset:0;background:rgba(26,30,22,.32);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;z-index:59}
+  #drawerScrim.open{opacity:1;visibility:visible}
+  @media(prefers-reduced-motion:reduce){#drawer{transition:none}}
+  .dwid{padding:6px 12px 14px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .dwid .idname{font-size:18px;font-weight:750;letter-spacing:-.01em;line-height:1.2}
+  .dwid .idno{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
+  .dwsect{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:14px 12px 4px}
+  .navitem{display:flex;align-items:center;gap:12px;width:100%;border:none;background:none;color:var(--ink);font-size:15px;font-weight:600;padding:11px 12px;border-radius:10px;cursor:pointer;text-align:left;font-family:inherit}
+  .navitem.on{background:var(--accent-weak);color:var(--accent)}
+  .navitem svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .navitem .cnt{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500}
+  .dwfoot{margin-top:auto;padding-top:10px}
+  .ghostbtn{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px;font-weight:600;color:var(--accent);cursor:pointer}
   /* list view */
   .lhead{padding:12px 14px 4px;flex:none}
   .listbody{flex:1;min-height:0;display:flex}
@@ -314,16 +314,45 @@
 </style>
 
 <div id="app" class="hidden">
-  <button id="askBtn" class="hidden" aria-hidden="true"></button>
-  <aside id="side">
-    <div class="sideid"><div class="idname" id="farmName">Herd</div><div class="idno" id="herdNo"></div></div>
-    <div id="sidenav"></div>
-    <div class="sidefoot"><button id="refresh" class="ghostbtn hidden">↻ Refresh</button></div>
+  <div id="drawerScrim"></div>
+  <aside id="drawer">
+    <div class="dwid"><div class="idname" id="farmName">Herd</div><div class="idno" id="herdNo"></div></div>
+    <div id="drawerNav"></div>
+    <div class="dwfoot"><button id="refresh" class="ghostbtn hidden">↻ Refresh sync</button></div>
   </aside>
   <main id="stage">
-    <header class="topbar"><div class="tbtitle" id="tbTitle">Home</div><div class="sp"><button id="refreshM" class="iconbtn2 hidden" title="Refresh">↻</button></div></header>
-    <section id="viewHome" class="view"></section>
-    <section id="viewList" class="view">
+    <header class="topbar">
+      <button id="menuBtn" class="iconbtn2" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="tbtitle" id="tbTitle">Collie</div>
+      <div class="sp">
+        <button id="asstSettings" class="iconbtn2 hidden" title="Collie settings" aria-label="Settings">⚙</button>
+        <button id="newChat" class="iconbtn2 hidden" title="New chat" aria-label="New chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+        <button id="refreshM" class="iconbtn2 hidden" title="Refresh">↻</button>
+      </div>
+    </header>
+    <section id="screenAssistant" class="screen">
+      <div class="csettings" id="chatSettings">
+        <label>Anthropic API key<input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+        <label>Model
+          <select id="modelSel">
+            <option value="claude-sonnet-5">Sonnet 5 — balanced (default)</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5 — fastest, cheapest</option>
+            <option value="claude-opus-5">Opus 5 — most capable</option>
+          </select>
+        </label>
+        <label>API endpoint (advanced — point at a proxy to keep your key off the device)<input id="endpointInp" placeholder="https://api.anthropic.com/v1/messages"></label>
+        <label class="ckrow"><input type="checkbox" id="speakChk"> Read answers aloud</label>
+        <p class="hint" style="margin:0">Your key stays in memory and isn't saved. Requests are billed to your Anthropic account. Herd data stays on this device — only your questions and small results are sent.</p>
+      </div>
+      <div class="cmsgs" id="chatMsgs"></div>
+      <div class="suggest" id="chatSuggest"></div>
+      <div class="ccompose">
+        <textarea id="chatInput" rows="1" placeholder="Ask Collie about your herd…"></textarea>
+        <button id="chatMic" class="micbtn hidden" title="Speak" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/></svg></button>
+        <button id="chatSend">Send</button>
+      </div>
+    </section>
+    <section id="viewList" class="screen">
       <div class="lhead">
         <div class="ltools">
           <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg><input id="q" type="search" placeholder="Search…" autocomplete="off"></div>
@@ -336,8 +365,8 @@
       <div class="count" id="count"></div>
       <div class="listbody"><div class="rows" id="rows"></div><section class="detail" id="detailPane"><button class="back" id="back">‹ Back</button><div id="detail"></div></section></div>
     </section>
+    <section id="viewNumbers" class="screen"></section>
   </main>
-  <nav id="bottomnav"></nav>
 </div>
 
 <script>
@@ -536,32 +565,41 @@ function bootUI(){
   $("#refresh").classList.toggle("hidden",!CFG.live);
   const rm=$("#refreshM"); if(rm){ rm.classList.toggle("hidden",!CFG.live); rm.onclick=()=>$("#refresh").click(); }
   buildNav();
-  if(!STATE.view) STATE.view="home";
+  if(!STATE.view) STATE.view="assistant";
   if(!STATE.tab) STATE.tab=(DATA.animals&&DATA.animals.length)?"animals":Object.keys(DATA).find(k=>k!=="system_type"&&DATA[k].length);
   render();
 }
+/* Collie's mark is a paw — a working dog, the farmer's helper */
+const PAW='<svg viewBox="0 0 24 24"><ellipse cx="6.5" cy="10" rx="1.7" ry="2.2"/><ellipse cx="11" cy="8" rx="1.8" ry="2.4"/><ellipse cx="15.5" cy="9" rx="1.7" ry="2.2"/><ellipse cx="19" cy="12.5" rx="1.5" ry="1.9"/><path d="M11 12.5c-3.1 0-5.2 2.1-5.2 4.3C5.8 18.7 8 19.8 11 19.8s5.2-1.1 5.2-3C16.2 14.6 14.1 12.5 11 12.5z"/></svg>';
 const NAV_ICONS={
-  home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
+  assistant:PAW,
   animals:'<svg viewBox="0 0 24 24"><path d="M5 8c0 5 3 9 7 9s7-4 7-9"/><path d="M4.6 8c-1-2-3-1.6-2.6.5M19.4 8c1-2 3-1.6 2.6.5"/><circle cx="9.7" cy="11" r="1.1"/><circle cx="14.3" cy="11" r="1.1"/></svg>',
   tasks:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.3 5.4l1 1 1.8-2M4.3 11.4l1 1 1.8-2M4.3 17.4l1 1 1.8-2"/></svg>',
-  __ask:'<svg viewBox="0 0 24 24"><path d="M4 5h16v10H8l-4 4z"/></svg>'
+  records:'<svg viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6z"/><path d="M9 12h7M9 16h7M9 8h4"/></svg>',
+  numbers:'<svg viewBox="0 0 24 24"><path d="M4 19V5M4 15l5-4 4 3 7-6"/></svg>'
 };
-function buildNav(){
-  const items=[{id:"home",label:"Home"}];
-  if(DATA.animals&&DATA.animals.length) items.push({id:"animals",label:"Herd"});
-  if((DATA.tasks&&DATA.tasks.length)||loadRems().length) items.push({id:"tasks",label:"Tasks"});
-  items.push({id:"__ask",label:"Ask"});
-  ["#sidenav","#bottomnav"].forEach(sel=>{
-    const c=$(sel); if(!c)return; c.innerHTML="";
-    items.forEach(it=>{
-      const b=document.createElement("button");
-      b.className="navitem"; b.dataset.nav=it.id;
-      b.innerHTML=(NAV_ICONS[it.id]||"")+`<span>${it.label}</span>`;
-      b.addEventListener("click",()=>switchTo(it.id));
-      c.appendChild(b);
-    });
-  });
+function navItems(){
+  const items=[{id:"assistant",label:"Ask Collie",icon:PAW}];
+  const browse=[];
+  if(DATA.animals&&DATA.animals.length) browse.push({id:"animals",label:"Herd",icon:NAV_ICONS.animals,cnt:DATA.animals.length});
+  if((DATA.tasks&&DATA.tasks.length)||loadRems().length) browse.push({id:"tasks",label:"Tasks",icon:NAV_ICONS.tasks,cnt:(DATA.tasks||[]).length+loadRems().length});
+  Object.keys(DATA).filter(k=>!["animals","tasks","system_type"].includes(k)&&Array.isArray(DATA[k])&&DATA[k].length)
+    .forEach(k=>browse.push({id:k,label:humanize(k),icon:NAV_ICONS.records,cnt:DATA[k].length}));
+  browse.push({id:"numbers",label:"By the numbers",icon:NAV_ICONS.numbers});
+  return {items,browse};
 }
+function buildNav(){
+  const c=$("#drawerNav"); if(!c)return; c.innerHTML="";
+  const {items,browse}=navItems();
+  const mk=it=>{const b=document.createElement("button");b.className="navitem";b.dataset.nav=it.id;
+    b.innerHTML=(it.icon||"")+`<span>${esc(it.label)}</span>`+(it.cnt!=null?`<span class="cnt">${it.cnt}</span>`:"");
+    b.addEventListener("click",()=>{closeDrawer();switchTo(it.id);});return b;};
+  items.forEach(it=>c.appendChild(mk(it)));
+  const sect=document.createElement("div");sect.className="dwsect";sect.textContent="Browse";c.appendChild(sect);
+  browse.forEach(it=>c.appendChild(mk(it)));
+}
+function openDrawer(){$("#drawer").classList.add("open");$("#drawerScrim").classList.add("open");}
+function closeDrawer(){$("#drawer").classList.remove("open");$("#drawerScrim").classList.remove("open");}
 
 function facets(){
   if(STATE.tab!=="animals")return [];
@@ -581,20 +619,29 @@ function matchRow(item){
   return true;
 }
 function render(){
-  const active=STATE.view==="home"?"home":STATE.tab;
-  document.querySelectorAll(".navitem").forEach(b=>b.classList.toggle("on",b.dataset.nav===active));
-  $("#tbTitle").textContent=STATE.view==="home"?"Home":(STATE.tab==="animals"?"Herd":(TAB_LABEL[STATE.tab]||humanize(STATE.tab)));
-  $("#viewHome").classList.toggle("on",STATE.view==="home");
-  $("#viewList").classList.toggle("on",STATE.view!=="home");
-  if(STATE.view==="home") renderHome(); else renderList();
+  const v=STATE.view;
+  const active=v==="list"?STATE.tab:v;
+  document.querySelectorAll("#drawerNav .navitem").forEach(b=>b.classList.toggle("on",b.dataset.nav===active));
+  $("#tbTitle").textContent = v==="assistant" ? "Collie"
+    : v==="numbers" ? "By the numbers"
+    : (STATE.tab==="animals"?"Herd":(TAB_LABEL[STATE.tab]||humanize(STATE.tab)));
+  $("#screenAssistant").classList.toggle("on",v==="assistant");
+  $("#viewList").classList.toggle("on",v==="list");
+  $("#viewNumbers").classList.toggle("on",v==="numbers");
+  // top-bar tools belong to the assistant screen only
+  $("#asstSettings").classList.toggle("hidden",v!=="assistant");
+  $("#newChat").classList.toggle("hidden",v!=="assistant");
+  if(v==="assistant"){ if(typeof renderAssistant==="function") renderAssistant(); }
+  else if(v==="numbers") renderNumbers();
+  else renderList();
 }
 function switchTo(target,opts){
-  if(target==="__ask"){ if(typeof openChat==="function") openChat(); return; }
   opts=opts||{};
+  if(target==="__ask"||target==="home"||target==="assistant"){ STATE.view="assistant"; render(); if(opts.seed&&typeof openChat==="function")openChat(opts.seed); return; }
   if(opts.taskFilter)STATE.taskFilter=opts.taskFilter;
   STATE.recSet=opts.recSet||null; STATE.recLabel=opts.recLabel||"";
-  STATE.view=target==="home"?"home":"list";
-  STATE.tab=target==="home"?STATE.tab:target;
+  STATE.view=target==="numbers"?"numbers":"list";
+  STATE.tab=(target==="numbers")?STATE.tab:target;
   STATE.q="";STATE.filters={};STATE.selected=null;
   const q=$("#q"); if(q) q.value="";
   document.body.classList.remove("mobiledetail");
@@ -917,57 +964,46 @@ function recCard(r){
     <div class="racts">${acts}<button class="ract dismiss" data-act="dismiss" title="Mark handled">Handled</button></div>
   </div>`;
 }
-function renderHome(){
-  const recs=computeRecs();
-  HOME_RECS={}; recs.forEach(r=>HOME_RECS[r.id]=r);
+/* Collie's opening turn — the day's recommendations, computed locally, rendered
+   as the first thing in the conversation (no API key needed to see them). */
+function recFeedHTML(){
+  const recs=computeRecs(); HOME_RECS={}; recs.forEach(r=>HOME_RECS[r.id]=r);
   const h=computeHome();
-  let statusLine=`${h.total} animals`;
-  const cows=(DATA.animals||[]).filter(isFemaleish).length; if(cows&&cows<h.total)statusLine+=` · ${cows} cows`;
-  if(CFG.syncedAt)statusLine+=` · ${CFG.live?"synced":"offline copy from"} ${fmtWhen(CFG.syncedAt)}`;
-  // rules-derived brief (no LLM required)
   const nowCount=recs.filter(r=>r.group==="now").length;
   const alerts=recs.filter(r=>r.level==="alert");
-  let brief= recs.length
-    ? `<b>${nowCount?`${nowCount} thing${nowCount>1?"s":""} to do today`:"Nothing urgent in-house"}.</b> ${alerts.length?`${alerts.length} flagged — ${esc(clip(alerts[0].title,44))}.`:"Nothing flagged."}`
-    : `<b>All clear.</b> Nothing needs your attention right now.`;
-  // groups
-  let groupsHtml="";
-  REC_GROUPS.forEach(g=>{
-    const rs=recs.filter(r=>r.group===g.id); if(!rs.length)return;
-    groupsHtml+=`<div class="rgroup"><div class="rghead"><div class="ic ${g.id}">${g.icon}</div><div class="t">${g.label}</div><div class="sub">${g.sub} · ${rs.length}</div></div>${rs.map(recCard).join("")}</div>`;
-  });
-  // suggested questions from the recs
-  const chips=["What needs my attention today?"].concat(recs.slice(0,2).map(r=>`Tell me about: ${r.title.replace(/^\d+\s*/,"")}`));
-  // demoted charts
+  const line = recs.length
+    ? `<b>${nowCount?`${nowCount} thing${nowCount>1?"s":""} to do today`:"Nothing urgent in-house"}.</b> ${alerts.length?`${alerts.length} flagged — ${esc(clip(alerts[0].title,40))}.`:"Nothing flagged."} Tap one, or just ask.`
+    : `<b>All clear.</b> Nothing needs you right now — ask me anything about the herd.`;
+  let sync=`${h.total} animals`; if(CFG.syncedAt)sync+=` · ${CFG.live?"synced":"offline copy"} ${fmtWhen(CFG.syncedAt)}`;
+  let groups="";
+  REC_GROUPS.forEach(g=>{const rs=recs.filter(r=>r.group===g.id);if(!rs.length)return;
+    groups+=`<div class="rgroup"><div class="rghead"><div class="ic ${g.id}">${g.icon}</div><div class="t">${g.label}</div><div class="sub">${g.sub} · ${rs.length}</div></div>${rs.map(recCard).join("")}</div>`;});
+  return `<div class="collie-open" id="openingTurn"><div class="collie-av">${PAW}</div><div class="body">`
+    +`<p class="hey"><b>${greeting()}.</b></p><p class="sub">${line}</p>${groups}`
+    +`<p class="sub" style="margin-top:10px">${esc(sync)}</p></div></div>`;
+}
+function renderAssistant(){
+  const msgs=$("#chatMsgs"); if(!msgs)return;
+  // (re)build the opening turn at the top, preserving any conversation below it
+  const html=recFeedHTML(); const existing=$("#openingTurn");
+  if(existing) existing.outerHTML=html; else msgs.insertAdjacentHTML("afterbegin",html);
+  const open=$("#openingTurn");
+  open.querySelectorAll(".rec").forEach(card=>{const rec=HOME_RECS[card.dataset.rec];
+    card.querySelectorAll("[data-act]").forEach(b=>b.addEventListener("click",()=>recAction(b.dataset.act,rec)));});
+  // suggestion chips drawn from today's recommendations
+  const recs=Object.values(HOME_RECS);
+  const chips=["What needs me today?"].concat(recs.slice(0,2).map(r=>`About: ${r.title.replace(/^\d+\s*/,"")}`));
+  const sg=$("#chatSuggest"); if(sg){sg.innerHTML=""; chips.forEach(c=>{const b=document.createElement("button");b.textContent=c;b.addEventListener("click",()=>send(c));sg.appendChild(b);});}
+}
+function renderNumbers(){
+  const h=computeHome();
   const stats=[statCell(h.avgAge!=null?h.avgAge+"y":"—","Avg age"),statCell(h.oldest!=null?h.oldest+"y":"—","Oldest"),
     h.pctFemale!=null?statCell(h.pctFemale+"%","Female"):statCell(h.mobs||"—","Mobs"),statCell(h.paddocks||"—","Paddocks")].join("");
   const secondary=(h.secondary&&h.secondary.series.length)?`<div class="card"><h3>${esc(h.secondary.title)}</h3>${chartSVG("pie",h.secondary.series)}</div>`:"";
-  const records=h.records.length?`<div class="card"><h3>Records</h3><div class="reclist">${h.records.map(r=>`<button class="recitem" data-go="${esc(r.key)}"><span>${esc(r.label)}</span><span class="c">${r.count}</span></button>`).join("")}</div></div>`:"";
-  $("#viewHome").innerHTML=`
-    <div class="home">
-      <div><div class="hgreet">${greeting()}</div><div class="hstatus">${esc(statusLine)}</div></div>
-      <div class="hbrief"><div class="spark">✦</div><p>${brief}</p></div>
-      <button class="askbar" id="homeAsk"><span class="q">Ask about your herd…</span><span class="go"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg></span></button>
-      <div class="hchips">${chips.map(c=>`<button class="hchip" data-ask="${esc(c)}">${esc(c)}</button>`).join("")}</div>
-      ${groupsHtml}
-      <details class="bynum">
-        <summary>By the numbers <span class="cv">breeds · ages · mobs ›</span></summary>
-        <div class="bbody">
-          <div class="stats">${stats}</div>
-          <div class="two"><div class="card"><h3>Breeds</h3>${chartSVG("pie",h.breeds)}</div>${secondary}</div>
-          <div class="card"><h3>Age profile</h3>${chartSVG("bar",h.ageSeries)}</div>
-          ${records}
-        </div>
-      </details>
-    </div>`;
-  const host=$("#viewHome");
-  host.querySelector("#homeAsk").addEventListener("click",()=>openChat());
-  host.querySelectorAll("[data-ask]").forEach(b=>b.addEventListener("click",()=>openChat(b.dataset.ask)));
-  host.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>switchTo(b.dataset.go)));
-  host.querySelectorAll(".rec").forEach(card=>{
-    const rec=HOME_RECS[card.dataset.rec];
-    card.querySelectorAll("[data-act]").forEach(b=>b.addEventListener("click",()=>recAction(b.dataset.act,rec)));
-  });
+  $("#viewNumbers").innerHTML=`<div class="home">
+    <div class="stats">${stats}</div>
+    <div class="two"><div class="card"><h3>Breeds</h3>${chartSVG("pie",h.breeds)}</div>${secondary}</div>
+    <div class="card"><h3>Age profile</h3>${chartSVG("bar",h.ageSeries)}</div></div>`;
 }
 function recAction(act,rec){
   if(!rec)return;
@@ -979,7 +1015,7 @@ function recAction(act,rec){
     openChat(`About "${rec.title}" (${tags.slice(0,20).join(", ")}) — what should I do, and what's involved?`);
     return;
   }
-  if(act==="dismiss"){const h=loadHandled();if(!h.includes(rec.id)){h.push(rec.id);saveHandled(h);}renderHome();toast("Marked handled");}
+  if(act==="dismiss"){const h=loadHandled();if(!h.includes(rec.id)){h.push(rec.id);saveHandled(h);}renderAssistant();toast("Marked handled");}
 }
 function rowContent(item,btn){
   const frag=document.createElement("div");
@@ -1243,66 +1279,23 @@ Promise.all([
   if(navigator.onLine===false)openCachedSync();
 });
 </script>
-<div id="chatBackdrop"></div>
-<div id="chat" role="dialog" aria-modal="true" aria-label="Ask about the herd">
-  <div class="grabber" id="chatGrab"><span></span></div>
-  <div class="chead">
-    <h2>Ask about the herd</h2>
-    <div class="sp">
-      <button class="iconbtn" id="chatSettingsBtn" title="Settings">⚙</button>
-      <button class="iconbtn" id="chatClose" title="Close">✕</button>
-    </div>
-  </div>
-  <div class="csettings" id="chatSettings">
-    <label>Anthropic API key<input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
-    <label>Model
-      <select id="modelSel">
-        <option value="claude-sonnet-5">Sonnet 5 — balanced (default)</option>
-        <option value="claude-haiku-4-5-20251001">Haiku 4.5 — fastest, cheapest</option>
-        <option value="claude-opus-5">Opus 5 — most capable</option>
-      </select>
-    </label>
-    <label>API endpoint (advanced — point at a proxy to keep your key off the device)<input id="endpointInp" placeholder="https://api.anthropic.com/v1/messages"></label>
-    <label class="ckrow"><input type="checkbox" id="speakChk"> Read answers aloud</label>
-    <p class="hint" style="margin:0">Your key stays in memory and isn't saved. Requests are billed to your Anthropic account. Herd data stays on this device — only your questions and small results are sent.</p>
-  </div>
-  <div class="cmsgs" id="chatMsgs"></div>
-  <div class="suggest" id="chatSuggest"></div>
-  <div class="ccompose">
-    <textarea id="chatInput" rows="1" placeholder="Ask, or tap the mic…"></textarea>
-    <button id="chatMic" class="micbtn hidden" title="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/></svg></button>
-    <button id="chatSend">Send</button>
-  </div>
-</div>
 
 <style>
-  .askbtn{margin-left:auto;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:999px;padding:6px 15px;font-size:13px;font-weight:650}
-  /* dim backdrop behind the assistant sheet */
-  #chatBackdrop{position:fixed;inset:0;background:rgba(26,30,22,.32);opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;z-index:49;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
-  #chatBackdrop.open{opacity:1;visibility:visible}
-  /* assistant as a bottom sheet on phone: rises from the bottom, rounded top, grab handle */
-  #chat{position:fixed;left:0;right:0;bottom:0;top:auto;height:88vh;max-height:88vh;background:var(--paper);
-    display:flex;flex-direction:column;border-radius:20px 20px 0 0;overflow:hidden;
-    box-shadow:0 -12px 40px -12px rgba(26,30,22,.28);transform:translateY(102%);
-    transition:transform .26s cubic-bezier(.2,.8,.2,1);z-index:50;will-change:transform}
-  #chat.open{transform:none}
-  .grabber{display:flex;justify-content:center;padding:8px 0 2px;flex:none;cursor:grab;touch-action:none}
-  .grabber span{width:38px;height:5px;border-radius:3px;background:var(--line)}
-  /* on desktop it's a centered dialog that fades and rises, not a right-side rail */
-  @media(min-width:760px){
-    #chat{left:50%;right:auto;bottom:auto;top:50%;width:min(560px,92vw);height:min(720px,86vh);
-      border:1px solid var(--line);border-radius:18px;transform:translate(-50%,-46%);opacity:0;visibility:hidden;
-      box-shadow:0 24px 60px -20px rgba(26,30,22,.35);transition:opacity .2s ease,transform .2s ease,visibility .2s ease}
-    #chat.open{transform:translate(-50%,-50%);opacity:1;visibility:visible}
-    .grabber{display:none}
-  }
-  @media(prefers-reduced-motion:reduce){#chat{transition:opacity .2s ease}}
-  .chead{display:flex;align-items:center;gap:10px;padding:6px 14px 12px;background:var(--card);border-bottom:1px solid var(--line)}
-  @media(min-width:760px){.chead{padding:12px 14px}}
-  .chead h2{font-size:16px;margin:0;font-weight:650}
-  .chead .sp{margin-left:auto;display:flex;gap:6px}
-  .iconbtn{border:1px solid var(--line);background:var(--paper);border-radius:8px;width:34px;height:34px;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .cmsgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+  /* assistant is the primary screen: conversation fills the stage, composer pinned at the foot */
+  #screenAssistant{background:var(--paper)}
+  .cmsgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:760px;width:100%;margin:0 auto}
+  .ccompose{max-width:760px;width:100%;margin:0 auto}
+  /* Collie's opening turn: avatar + greeting + recommendation cards */
+  .collie-open{display:flex;gap:10px;align-items:flex-start}
+  .collie-av{flex:none;width:34px;height:34px;border-radius:10px;background:var(--accent-weak);display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .collie-av svg{width:21px;height:21px;fill:var(--accent)}
+  .collie-open .body{flex:1;min-width:0}
+  .collie-open .hey{font-size:15px;line-height:1.5;margin:0 0 4px}
+  .collie-open .hey b{font-weight:700}
+  .collie-open .sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .avatar-dog{display:inline-flex}
+  .bubble .collie-av{width:26px;height:26px;border-radius:8px}
+  .cmsgs .rgroup{margin-top:10px}
   .bubble{max-width:86%;padding:10px 13px;border-radius:14px;font-size:14.5px;line-height:1.45;word-wrap:break-word}
   .bubble.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
   .bubble.assistant{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px}
@@ -1511,7 +1504,7 @@ function runTool(name,input){
     }
     if(name==="show_recommendations"){
       const recs=computeRecs().filter(r=>!input.group||r.group===input.group);
-      STATE.view="home";render();
+      STATE.view="assistant";render();
       return {recommendations:recs.map(r=>({group:r.group,title:r.title,count:r.count}))};
     }
     return {error:"unknown tool "+name};
@@ -1525,7 +1518,7 @@ function buildSystem(){
   const enumFields=keys.filter(k=>a.some(x=>typeof x[k]==="string"&&LOOKUP.has(x[k])));
   const species=[...new Set(a.map(x=>resolve(x.species)).filter(Boolean))].join(", ")||"livestock";
   return [
-    `You are a practical livestock herd assistant embedded in a farmer's records app. Today is ${new Date(now).toDateString()}.`,
+    `You are Collie, the farmer's right-hand helper in their livestock records app — named after a working farm dog, and that's the manner: quick, loyal, plain-spoken, no fuss. Today is ${new Date(now).toDateString()}.`,
     `The herd has ${a.length} animals (${species}). Other datasets: ${Object.keys(DATA).filter(k=>k!=="system_type"&&k!=="animals").join(", ")||"none"}.`,
     `Animal fields: ${keys.join(", ")}.`,
     `Date fields (epoch ms): ${dateFields.join(", ")||"none"}. Coded fields resolved to plain names: ${enumFields.join(", ")||"none"}.`,
@@ -1592,22 +1585,13 @@ function briefing(){
 
 /* ---- settings + open/close ---- */
 function openSettings(on){$("#chatSettings").classList.toggle("open",on!==undefined?on:!$("#chatSettings").classList.contains("open"));}
-function closeChat(){
-  $("#chat").classList.remove("open"); $("#chatBackdrop").classList.remove("open");
-  chatState.open=false; if("speechSynthesis" in window)speechSynthesis.cancel();
-}
+/* the assistant is the home screen; "opening" it just means switching to it (and, if given, asking) */
 function openChat(seed){
-  $("#chat").classList.add("open"); $("#chatBackdrop").classList.add("open"); chatState.open=true;
-  if(!CFG.apiKey){
-    openSettings(true);
-    if(!$("#chatMsgs").children.length) addBubble("assistant","Hi — add your Anthropic API key above and I'll brief you on the herd and answer questions. Your data stays on this device.");
-    if(seed)chatState.pendingSeed=seed;   // send it once a key is added
-    return;
-  }
-  if(seed){ send(seed); }
-  else briefing();
+  STATE.view="assistant"; render(); chatState.open=true; closeDrawer();
+  if(!CFG.apiKey){ openSettings(true); if(seed)chatState.pendingSeed=seed; return; }
+  if(seed) send(seed);
 }
-const SUGGEST=["Anything I should act on?","Breed breakdown chart","Which cows are dry?","Oldest 5 animals","Ages by breed"];
+function newChat(){ chatState.msgs=[]; chatState.briefed=false; $("#chatMsgs").innerHTML=""; openSettings(false); renderAssistant(); }
 
 /* ---- voice: read answers aloud (SpeechSynthesis) and dictate (SpeechRecognition) ---- */
 function speak(text){
@@ -1636,19 +1620,11 @@ function setupVoice(){
 }
 /* ---- wire up ---- */
 (function(){
-  $("#askBtn").addEventListener("click",openChat);
-  $("#chatClose").addEventListener("click",closeChat);
-  $("#chatBackdrop").addEventListener("click",closeChat);
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&chatState.open)closeChat();});
-  // swipe the grab handle down to dismiss the sheet (phone)
-  (function(){
-    const grab=$("#chatGrab"),sheet=$("#chat"); if(!grab)return; let y0=null;
-    grab.addEventListener("pointerdown",e=>{y0=e.clientY;grab.setPointerCapture(e.pointerId);});
-    grab.addEventListener("pointermove",e=>{if(y0==null)return;const dy=Math.max(0,e.clientY-y0);sheet.style.transform=`translateY(${dy}px)`;});
-    const end=e=>{if(y0==null)return;const dy=(e.clientY||0)-y0;sheet.style.transform="";if(dy>110)closeChat();y0=null;};
-    grab.addEventListener("pointerup",end); grab.addEventListener("pointercancel",end);
-  })();
-  $("#chatSettingsBtn").addEventListener("click",()=>openSettings());
+  $("#menuBtn").addEventListener("click",openDrawer);
+  $("#drawerScrim").addEventListener("click",closeDrawer);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#drawer").classList.contains("open"))closeDrawer();});
+  $("#asstSettings").addEventListener("click",()=>openSettings());
+  $("#newChat").addEventListener("click",newChat);
   $("#apiKey").addEventListener("input",e=>{CFG.apiKey=e.target.value.trim();
     if(CFG.apiKey&&chatState.pendingSeed){const s=chatState.pendingSeed;chatState.pendingSeed=null;setTimeout(()=>send(s),50);}});
   $("#modelSel").addEventListener("change",e=>{CFG.model=e.target.value;});
@@ -1658,7 +1634,6 @@ function setupVoice(){
   inp.addEventListener("input",()=>{inp.style.height="auto";inp.style.height=Math.min(120,inp.scrollHeight)+"px";});
   inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();const v=inp.value;inp.value="";inp.style.height="auto";send(v);}});
   $("#chatSend").addEventListener("click",()=>{const v=inp.value;inp.value="";inp.style.height="auto";send(v);});
-  const sg=$("#chatSuggest"); SUGGEST.forEach(s=>{const b=document.createElement("button");b.textContent=s;b.addEventListener("click",()=>send(s));sg.appendChild(b);});
   setupVoice();
 })();
 </script>

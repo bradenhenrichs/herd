@@ -94,10 +94,19 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   reminders in `localStorage` `herd:reminders`; `reminderTasks()` folds them into the Tasks
   list. **This is the seam for future Herdwatch write-back**: when write endpoints are known,
   swap the adapter bodies to POST and keep the call sites. `toast()` is the transient confirmation.
-- **Views:** `render()` dispatches Home vs List. `renderHome()` renders the recommendation
-  feed (rules-derived brief, an ask bar, grouped rec cards with actions — View animals /
-  Create reminder / Ask / Handled) and demotes the old charts into a collapsed
-  `details.bynum` "By the numbers" section built by `computeHome()`. `renderList()` +
+- **Chat-first shell:** the app is **conversation-first** — it opens into **Collie**
+  (the assistant), not a dashboard. `render()` is a screen router over `STATE.view` ∈
+  `assistant` | `list` | `numbers`; `switchTo(target,opts)` changes screen (a tab key →
+  list, `numbers`, or `assistant`). A slide-in **drawer** (`buildNav`/`navItems`,
+  `openDrawer`/`closeDrawer`) holds the secondary destinations — Ask Collie, then Herd,
+  Tasks, each record entity, By the numbers. The top bar is menu / title / (on the
+  assistant only) settings + new-chat.
+- **Collie's opening turn:** `renderAssistant()` renders the day's recommendations as the
+  first thing in the conversation (`recFeedHTML` → greeting + grouped rec cards, injected
+  at the top of `#chatMsgs`, preserved above any messages), plus suggestion chips from the
+  recs. It needs no API key — the recs are local. `renderNumbers()` is the demoted charts
+  screen (built from `computeHome()`). The old `renderHome` dashboard is gone.
+- **Views:** `renderList()` +
   `rowContent()` + `renderDetail()` are
   the herd/records browser (search, filter chips, master-detail). **Herd list:** on a
   wide screen (`isWide()`, ≥760px) the animals tab renders a sortable multi-column
@@ -141,7 +150,10 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   self-contained SVG, no chart library. (Defined in the chat script; both scripts
   share global scope, so the dashboard reuses them.)
 
-## Chat assistant — `index.html`, chat script
+## Chat assistant (Collie) — `index.html`, chat script
+- **Collie** is the assistant and the app's primary surface (named after a working farm
+  dog; paw mark `PAW` as its avatar; persona set in `buildSystem()`). The conversation is
+  the landing screen — see the chat-first shell above.
 - Calls the **Anthropic Messages API directly from the browser** using the user's own
   API key (header `anthropic-dangerous-direct-browser-access: true`). The key is
   entered at runtime via the ⚙ panel, held **in memory only, never persisted**. The
