@@ -55,13 +55,24 @@ It is a personal-use client for the owner's own Herdwatch account and data.
 
 ## Code map — `index.html`, main script
 - `ingest(objs)` — merges entities from one or more payloads (API or dropped JSON
-  files); builds `LOOKUP` from `system_type`; calls `detectFields` then `bootUI`.
+  files); builds `LOOKUP` from `system_type`; calls `detectFields`, then `buildRefs`,
+  then `bootUI`.
 - `detectFields(animals)` — **schema-adaptive**: finds the tag/name/sex/breed/dob/
   status/mob fields by name pattern *and* whether they're actually populated. `tag`
   prefers a real populated tag field over compound `*Tag` fields. `tagOf(item)`
   returns a safe headline value (never the literal `null`).
-- `disp(v)` — display formatter: resolves enum codes via `LOOKUP`, formats `{date:ms}`
-  or bare epoch-ms as dates, booleans, and arrays. Used everywhere for output.
+- `buildRefs()` — builds `REF`, a global map of every entity's `id` (and, for animals,
+  their tag) → a human name, so **cross-entity reference fields resolve to names, not
+  raw ids**. Animals headline by tag; other entities (mobs, paddocks, …) by their
+  `name`/`title` field. This is what turns `mob:"m1"` into "Milkers", `paddock` into a
+  field name, and a `dam`/`sire` internal id into the referenced animal's tag.
+- `disp(v)` — display formatter: resolves enum codes via `LOOKUP`, then entity
+  references via `REF`, formats `{date:ms}` or bare epoch-ms as dates, booleans, and
+  arrays. Used everywhere for output. Reference resolution is string-only (a numeric
+  quantity is never mistaken for an id).
+- `humanize(k)` — turns a field key into a label: whole-key overrides (`LABELS`), then
+  per-word acronym casing (`ACR`: AI, TB, EID, DNA, ICBF, …) and abbreviation spell-out
+  (`ABBR`: est→Estimated, qty→Quantity, …). Add jargon here rather than in call sites.
 - **Views:** `render()` dispatches Home vs List. `renderHome()` + `computeHome()`
   build the dashboard (composition + age charts, attention strip for overdue tasks,
   stat strip, records list). `renderList()` + `rowContent()` + `renderDetail()` are

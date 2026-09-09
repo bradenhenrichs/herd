@@ -230,16 +230,26 @@
 
 <script>
 "use strict";
-let DATA={}, LOOKUP=new Map();
+let DATA={}, LOOKUP=new Map(), REF=new Map();
 let STATE={tab:null,q:"",filters:{},selected:null};
 let CFG={host:"mcie-prod.hwbe.io",version:"9.9.28",country:"IE",deviceId:null,token:null,creds:null,live:false,profile:null,farm:null};
 
 const $=s=>document.querySelector(s);
 const now=Date.now();
-const LABELS={dob:"Date of birth",ai:"AI",tb:"TB",icbf:"ICBF",cts:"CTS",bcms:"BCMS",eid:"EID",dna:"DNA"};
+/* whole-key overrides (jargon that shouldn't just be title-cased) */
+const LABELS={dob:"Date of birth",herdno:"Herd number",herdnumber:"Herd number",
+  mob:"Mob",paddock:"Paddock",dam:"Dam",sire:"Sire",damtag:"Dam",siretag:"Sire",
+  milkingstatus:"Milking status",bcs:"Body condition"};
+/* acronyms to keep upper-case, and abbreviations to spell out, matched per word */
+const ACR={ai:"AI",tb:"TB",icbf:"ICBF",cts:"CTS",bcms:"BCMS",eid:"EID",dna:"DNA",bcs:"BCS",id:"ID"};
+const ABBR={est:"Estimated",prev:"Previous",qty:"Quantity",avg:"Average",num:"Number",dob:"Date of birth"};
 function humanize(k){
-  if(LABELS[String(k).toLowerCase()]) return LABELS[String(k).toLowerCase()];
-  return k.replace(/([a-z])([A-Z])/g,"$1 $2").replace(/[_-]+/g," ").replace(/\bid\b/ig,"ID").replace(/^\w/,c=>c.toUpperCase()).replace(/\s+/g," ").trim();
+  const lk=String(k).toLowerCase();
+  if(LABELS[lk]) return LABELS[lk];
+  const words=k.replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g,"$1 $2")
+    .replace(/[_-]+/g," ").replace(/\s+/g," ").trim().split(" ");
+  const out=words.map(w=>{const wl=w.toLowerCase();return ACR[wl]||ABBR[wl]||w;}).join(" ");
+  return out.replace(/^\w/,c=>c.toUpperCase());
 }
 function epochMs(v){if(v&&typeof v==="object"&&typeof v.date==="number")return v.date;if(typeof v==="number"&&v>1e11&&v<4.2e12)return v;return null;}
 function fmtDate(ms){const d=new Date(ms);if(isNaN(d))return String(ms);return d.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"});}
@@ -249,7 +259,8 @@ function disp(v,key){
   const ms=epochMs(v);if(ms!==null)return fmtDate(ms);
   if(Array.isArray(v))return v.map(x=>disp(x,key)).join(", ")||"—";
   if(typeof v==="object")return "";
-  if(typeof v==="string"&&LOOKUP.has(v))return LOOKUP.get(v).displayName;
+  if(typeof v==="string"&&LOOKUP.has(v))return LOOKUP.get(v).displayName;      // enum code → name
+  if(typeof v==="string"&&REF.has(v))return REF.get(v).name;                    // entity id/tag → name
   if(typeof v==="boolean")return v?"Yes":"No";
   return String(v);
 }
@@ -275,6 +286,30 @@ function detectFields(animals){
 }
 function tagOf(item){const v=F.tag?item[F.tag]:undefined;return (v===null||v===undefined||v==="")?(item.id||"—"):v;}
 
+/* index every entity's id (and, for animals, tag) → a human name, so ID-valued
+   reference fields (mob, paddock, dam/sire, …) resolve to names instead of codes.
+   Animals headline by tag; other entities by their name/title field. */
+function refName(row,nameK){
+  if(nameK&&row[nameK]!=null&&row[nameK]!==""){const v=row[nameK];return LOOKUP.has(v)?LOOKUP.get(v).displayName:String(v);}
+  return row.id!=null?String(row.id):null;
+}
+function buildRefs(){
+  REF=new Map();
+  for(const [entity,rows] of Object.entries(DATA)){
+    if(entity==="system_type"||!Array.isArray(rows))continue;
+    const isAnimals=(entity==="animals");
+    const sample=rows.find(r=>r&&typeof r==="object")||{};
+    const nameK=isAnimals?null:(keyLike(sample,/^name$|^title$/i)||keyLike(sample,/name$|title$/i));
+    const put=(k,label)=>{if(k!=null&&k!==""&&label&&!REF.has(String(k)))REF.set(String(k),{name:label,entity});};
+    for(const r of rows){
+      if(!r||typeof r!=="object")continue;
+      const label=isAnimals?String(tagOf(r)):refName(r,nameK);
+      put(r.id,label);
+      if(isAnimals&&F.tag&&F.tag!=="id")put(r[F.tag],label); // dam/sire refs point at tags
+    }
+  }
+}
+
 function ingest(objs){
   const merged={};
   for(const o of objs){
@@ -287,6 +322,7 @@ function ingest(objs){
   for(const t of (merged.system_type||[])) if(t&&t.id&&!LOOKUP.has(t.id)) LOOKUP.set(t.id,{displayName:t.displayName||t.id,type:t.type});
   DATA=merged;
   if(DATA.animals) detectFields(DATA.animals);
+  buildRefs();
   bootUI();
 }
 
