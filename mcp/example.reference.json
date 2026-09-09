@@ -1,0 +1,6 @@
+{"entities":{"system_type":[
+ {"id":"BR_LMX","displayName":"LIMOUSIN X (LMX)","type":"breed"},
+ {"id":"SX_F","displayName":"Female","type":"sex"},{"id":"SX_M","displayName":"Male","type":"sex"},
+ {"id":"ST_ON","displayName":"On farm","type":"status"},{"id":"SP_CATTLE","displayName":"Cattle","type":"species"},
+ {"id":"U_ML","displayName":"ml","type":"unitType"}
+]}}
