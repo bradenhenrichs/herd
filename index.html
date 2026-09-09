@@ -16,6 +16,7 @@
   :root{
     --paper:#F4F5F1; --card:#FFFFFF; --ink:#1A1E16; --muted:#6B7266;
     --line:#DADED3; --accent:#2F6B34; --accent-weak:#E4EFE2; --alert:#A5402A;
+    --alert-weak:#F3E4DF; --slate:#3F6B77; --slate-weak:#E2ECEF;
     --radius:10px;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
@@ -251,6 +252,65 @@
   .recitem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 2px;border:none;border-bottom:1px solid var(--line);background:none;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
   .recitem:last-child{border-bottom:none}
   .recitem .c{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  /* home: recommendation feed */
+  .hgreet{font-size:22px;font-weight:750;letter-spacing:-.02em}
+  .hstatus{color:var(--muted);font-size:13px;margin-top:2px}
+  .hbrief{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 13px;display:flex;gap:10px;align-items:flex-start}
+  .hbrief .spark{flex:none;width:22px;height:22px;border-radius:7px;background:var(--accent-weak);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:1px}
+  .hbrief p{margin:0;font-size:13.5px;line-height:1.5}
+  .askbar{display:flex;align-items:center;gap:9px;background:var(--card);border:1.5px solid var(--accent);border-radius:999px;padding:9px 16px;cursor:pointer;text-align:left;width:100%;font:inherit}
+  .askbar .q{flex:1;color:var(--muted);font-size:15px}
+  .askbar .go{flex:none;color:var(--accent)}
+  .askbar .go svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .hchips{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
+  .hchip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--accent);white-space:nowrap;cursor:pointer;font:inherit}
+  .rgroup{display:flex;flex-direction:column;gap:9px}
+  .rghead{display:flex;align-items:center;gap:9px;padding:2px}
+  .rghead .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}
+  .rghead .ic svg{width:15px;height:15px;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .rghead .t{font-weight:700;font-size:13.5px;letter-spacing:-.01em}
+  .rghead .sub{color:var(--muted);font-size:12px}
+  .ic.now{background:var(--accent-weak);stroke:var(--accent)}
+  .ic.book{background:var(--slate-weak);stroke:var(--slate)}
+  .ic.watch{background:var(--alert-weak);stroke:var(--alert)}
+  .rec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px 12px;position:relative;overflow:hidden}
+  .rec::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .rec.good::before{background:var(--accent)}
+  .rec.info::before{background:var(--slate)}
+  .rec.alert::before{background:var(--alert)}
+  .rec .rtop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .rec .rtitle{font-weight:650;font-size:14.5px;letter-spacing:-.01em}
+  .rec .rcount{font-family:var(--mono);font-size:12px;color:var(--muted);flex:none}
+  .rec .rwhy{color:var(--muted);font-size:13px;margin-top:3px}
+  .rec .rtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .rec .tg{font-family:var(--mono);font-size:11.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--ink)}
+  .rec .tg.due{color:var(--alert);border-color:#E4C9C0;background:var(--alert-weak)}
+  .racts{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+  .ract{border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--ink);display:inline-flex;align-items:center;gap:6px;cursor:pointer;font:inherit}
+  .ract.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ract.ask{color:var(--accent)}
+  .ract.dismiss{margin-left:auto;border:none;background:none;color:var(--muted);padding:7px 4px}
+  .ract svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  details.bynum{border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+  details.bynum>summary{list-style:none;cursor:pointer;padding:14px 15px;font-weight:650;font-size:13.5px;display:flex;justify-content:space-between;align-items:center}
+  details.bynum>summary::-webkit-details-marker{display:none}
+  details.bynum>summary .cv{color:var(--muted);font-weight:500;font-size:13px}
+  details.bynum[open]>summary{border-bottom:1px solid var(--line)}
+  details.bynum .bbody{padding:14px 15px;display:flex;flex-direction:column;gap:15px}
+  .recbanner{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--accent-weak);border-bottom:1px solid var(--line);font-size:13px;color:var(--accent);font-weight:600}
+  .recbanner button{margin-left:auto;border:1px solid var(--accent);background:none;color:var(--accent);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer}
+  .remstrip{display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
+  .remrow{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .remrow:last-child{border-bottom:none}
+  .remrow .tk{flex:none;width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--accent)}
+  .remrow.done .tk{background:var(--accent);border-color:var(--accent);color:#fff}
+  .remrow.done .rmtitle{text-decoration:line-through;color:var(--muted)}
+  .remrow .rmtitle{flex:1;font-size:14px;font-weight:600}
+  .remrow .rmsub{color:var(--muted);font-size:12px;font-weight:500}
+  .remrow .del{border:none;background:none;color:var(--muted);cursor:pointer;font-size:16px}
+  .remhdr{padding:9px 14px 4px;font-size:12px;font-weight:700;color:var(--muted)}
+  #toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;opacity:0;transition:opacity .2s,transform .2s;z-index:100;pointer-events:none;max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 
 <div id="app" class="hidden">
@@ -283,7 +343,7 @@
 <script>
 "use strict";
 let DATA={}, LOOKUP=new Map(), REF=new Map();
-let STATE={tab:null,q:"",filters:{},selected:null,taskFilter:"open",cols:null,sortCol:null,sortDir:1,detailTab:"details"};
+let STATE={tab:null,q:"",filters:{},selected:null,taskFilter:"open",cols:null,sortCol:null,sortDir:1,detailTab:"details",recSet:null,recLabel:""};
 let CFG={host:"mcie-prod.hwbe.io",version:"9.9.28",country:"IE",deviceId:null,token:null,creds:null,live:false,profile:null,farm:null};
 
 const $=s=>document.querySelector(s);
@@ -489,7 +549,7 @@ const NAV_ICONS={
 function buildNav(){
   const items=[{id:"home",label:"Home"}];
   if(DATA.animals&&DATA.animals.length) items.push({id:"animals",label:"Herd"});
-  if(DATA.tasks&&DATA.tasks.length) items.push({id:"tasks",label:"Tasks"});
+  if((DATA.tasks&&DATA.tasks.length)||loadRems().length) items.push({id:"tasks",label:"Tasks"});
   items.push({id:"__ask",label:"Ask"});
   ["#sidenav","#bottomnav"].forEach(sel=>{
     const c=$(sel); if(!c)return; c.innerHTML="";
@@ -511,6 +571,7 @@ function facets(){
   return out;
 }
 function matchRow(item){
+  if(STATE.recSet&&STATE.tab==="animals"&&!STATE.recSet.includes(item))return false;
   if(STATE.q){
     const q=STATE.q.toLowerCase();
     const hay=Object.values(item).map(v=>{if(v&&typeof v==="object")return "";return (String(v)+" "+disp(v)).toLowerCase();}).join(" ");
@@ -527,8 +588,11 @@ function render(){
   $("#viewList").classList.toggle("on",STATE.view!=="home");
   if(STATE.view==="home") renderHome(); else renderList();
 }
-function switchTo(target){
+function switchTo(target,opts){
   if(target==="__ask"){ if(typeof openChat==="function") openChat(); return; }
+  opts=opts||{};
+  if(opts.taskFilter)STATE.taskFilter=opts.taskFilter;
+  STATE.recSet=opts.recSet||null; STATE.recLabel=opts.recLabel||"";
   STATE.view=target==="home"?"home":"list";
   STATE.tab=target==="home"?STATE.tab:target;
   STATE.q="";STATE.filters={};STATE.selected=null;
@@ -596,7 +660,7 @@ function sortAnimals(items){
     return x<y?-dir:x>y?dir:0;
   });
 }
-function renderAnimalsTable(items){
+function renderAnimalsTable(items,host){
   const cols=STATE.cols;
   const head=cols.map(k=>{const ar=STATE.sortCol===k?`<span class="ar">${STATE.sortDir>0?"▲":"▼"}</span>`:"";return `<th data-col="${esc(k)}">${esc(colLabel(k))}${ar}</th>`;}).join("");
   const body=items.map(a=>{
@@ -608,7 +672,7 @@ function renderAnimalsTable(items){
     const on=STATE.selected===a?" class=\"on\"":"";
     return `<tr${on} data-i="${items.indexOf(a)}">${tds}</tr>`;
   }).join("");
-  const rows=$("#rows");
+  const rows=host||$("#rows");
   rows.innerHTML=`<table class="htable"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
   rows.querySelectorAll("thead th").forEach(th=>th.addEventListener("click",()=>{
     const k=th.dataset.col; if(STATE.sortCol===k)STATE.sortDir=-STATE.sortDir; else {STATE.sortCol=k;STATE.sortDir=1;} render();
@@ -667,19 +731,26 @@ function renderList(){
         c.onclick=()=>{if(STATE.filters[f.field]===f.val)delete STATE.filters[f.field];else STATE.filters[f.field]=f.val;render();};chipWrap.appendChild(c);});
     }else chipWrap.style.display="none";
   }
-  const list=DATA[STATE.tab]||[];
+  const list=isTasks?(DATA.tasks||[]).concat(reminderTasks()):(DATA[STATE.tab]||[]);
   let items=list.filter(matchRow);
   if(isTasks){items=items.filter(t=>taskPasses(t,STATE.taskFilter)).sort(taskCmp);}
   if(isAnimals)items=sortAnimals(items);
   $("#count").textContent=`${items.length} of ${list.length}`;
-  const dl=$("#dlBtn"); if(dl)dl.onclick=()=>downloadCSV(items);
+  const dl=$("#dlBtn"); if(dl)dl.onclick=()=>downloadCSV(items.filter(a=>!a.__reminder));
+  const rows=$("#rows");
+  // banner: animals filtered to a recommendation's set
+  let banner="";
+  if(isAnimals&&STATE.recSet)banner=`<div class="recbanner"><span>${esc(clip(STATE.recLabel||"Selected animals",44))}</span><button id="recClear">Clear</button></div>`;
   if(table){
-    renderAnimalsTable(items);
+    rows.innerHTML=banner;
+    const box=document.createElement("div"); rows.appendChild(box);
+    renderAnimalsTable(items,box);
   }else{
-    const rows=$("#rows");rows.innerHTML="";
+    rows.innerHTML=banner;
     items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item,b));
       b.onclick=()=>{STATE.selected=item;STATE.detailTab="details";document.body.classList.add("mobiledetail");render();};rows.appendChild(b);});
   }
+  const rc=$("#recClear"); if(rc)rc.onclick=()=>{STATE.recSet=null;STATE.recLabel="";render();};
   renderDetail();
 }
 
@@ -701,6 +772,113 @@ function taskInfo(t){
   const done=/done|closed|complete/i.test(statusText);
   return {title:disp(t[tiK]),dueMs,statusText,done,overdue:dueMs!==null&&dueMs<now&&!done};
 }
+/* ---------- recommendation rules engine (local, deterministic, offline) ----------
+   Every card and the animals behind it are computed here; the assistant never
+   invents a count. Each rule is guarded by whether the fields/records it needs
+   actually exist, so it stays quiet on a herd that doesn't carry that data. */
+const HANDLED_KEY="herd:handled";
+function loadHandled(){try{return JSON.parse(localStorage.getItem(HANDLED_KEY)||"[]");}catch(e){return [];}}
+function saveHandled(a){try{localStorage.setItem(HANDLED_KEY,JSON.stringify(a));}catch(e){}}
+function daysAgo(ms){return (now-ms)/86400000;}
+function onFarm(a){const t=F.status?disp(a[F.status]):"";return !t||t==="—"||/on.?farm|active|alive|present|current/i.test(t);}
+function isFemaleish(a){return !F.sex||/female|^f$|cow|heifer/i.test(disp(a[F.sex]));}
+function animalIndex(){const idx=new Map();(DATA.animals||[]).forEach(a=>idsOf(a).forEach(k=>{if(!idx.has(k))idx.set(k,a);}));return idx;}
+function recordAnimal(rec,idx){
+  for(const k of Object.keys(rec)){const v=rec[k];
+    if((typeof v==="string"||typeof v==="number")&&/animal|tag|dam|calf|beast|ear|mgmt/i.test(k)&&idx.has(String(v)))return idx.get(String(v));}
+  return null;
+}
+/* per-animal aggregates gathered from other entities (weights, treatments…) */
+function herdSignals(){
+  const idx=animalIndex(),lastWeight=new Map(),withdrawalUntil=new Map();
+  for(const [entity,rows] of Object.entries(DATA)){
+    if(!Array.isArray(rows)||["animals","system_type","tasks"].includes(entity))continue;
+    for(const r of rows){
+      if(!r||typeof r!=="object")continue;
+      const a=recordAnimal(r,idx); if(!a)continue;
+      const keys=Object.keys(r);
+      const wK=keys.find(k=>/weight/i.test(k)&&typeof r[k]==="number");
+      if(wK){const dK=keys.find(k=>epochMs(r[k])!=null);const ms=dK?epochMs(r[dK]):null;if(ms!=null){const c=lastWeight.get(a);if(c==null||ms>c)lastWeight.set(a,ms);}}
+      let wd=null;
+      const endK=keys.find(k=>/withdraw/i.test(k)&&epochMs(r[k])!=null);
+      if(endK)wd=epochMs(r[endK]);
+      else{const daysK=keys.find(k=>/withdraw/i.test(k)&&typeof r[k]==="number");const tK=keys.find(k=>/date|treat|given|admin/i.test(k)&&epochMs(r[k])!=null);if(daysK&&tK)wd=epochMs(r[tK])+r[daysK]*86400000;}
+      if(wd!=null){const c=withdrawalUntil.get(a);if(c==null||wd>c)withdrawalUntil.set(a,wd);}
+    }
+  }
+  return {lastWeight,withdrawalUntil};
+}
+function computeRecs(){
+  const A=DATA.animals||[]; if(!A.length)return [];
+  const sig=herdSignals(),handled=loadHandled(),recs=[];
+  const add=r=>{if(r&&r.items&&r.items.length&&!handled.includes(r.id)){r.count=r.items.length;recs.push(r);}};
+  const s=A[0]||{};
+  const tbK=keyLike(s,/tb.?test|lasttb|tbdate|tuberc/i);
+  const serveK=keyLike(s,/serve|served|ai.?date|inseminat|mating/i);
+  const scanK=keyLike(s,/scan|preg.?check|^pd$/i);
+  const calvK=keyLike(s,/estcalv|expectedcalv|duecalv|calvingdue|calvingdate/i);
+  const damK=keyLike(s,/^dam$|damtag|damid|mother/i);
+  // overdue tasks (now / alert)
+  const overdue=(DATA.tasks||[]).filter(t=>taskInfo(t).overdue);
+  if(overdue.length)add({id:"overdue",group:"now",level:"alert",kind:"tasks",title:`${overdue.length} task${overdue.length>1?"s":""} overdue`,why:overdue.slice(0,2).map(t=>taskInfo(t).title).join(" · "),items:overdue});
+  // weaning due (now / good)
+  if(F.dob)add({id:"wean",group:"now",level:"good",kind:"animals",title:"__",why:"Aged 8–12 months, still on farm.",
+    items:A.filter(a=>{const ms=epochMs(a[F.dob]);if(ms==null)return false;const m=daysAgo(ms)/30.44;return m>=8&&m<=12&&onFarm(a);}),tmpl:n=>`${n} ${n===1?"calf":"calves"} ready to wean`});
+  // weighing gap (now / info) — only if the herd carries weight records
+  if(sig.lastWeight.size)add({id:"weigh",group:"now",level:"info",kind:"animals",title:"__",why:"Weigh at the next handling to track condition.",
+    items:A.filter(a=>{const ms=sig.lastWeight.get(a);return onFarm(a)&&(ms==null||daysAgo(ms)>182);}),tmpl:n=>`${n} not weighed in 6 months`});
+  // missing dam (now / info)
+  if(damK)add({id:"nodam",group:"now",level:"info",kind:"animals",title:"__",why:"No dam recorded.",
+    items:A.filter(a=>onFarm(a)&&(a[damK]==null||a[damK]==="")),tmpl:n=>`${n} missing a dam record`});
+  // cull review (now / info)
+  if(F.dob)add({id:"cull",group:"now",level:"info",kind:"animals",title:"__",why:"Older breeding stock — review for culling.",
+    items:A.filter(a=>{const ms=epochMs(a[F.dob]);return onFarm(a)&&ms!=null&&daysAgo(ms)/365.25>=12&&isFemaleish(a);}),tmpl:n=>`${n} cow${n>1?"s":""} over 12 years`});
+  // TB test due (book / alert)
+  if(tbK)add({id:"tb",group:"book",level:"alert",kind:"animals",title:"__",why:"Over 11 months since the last test — needs the vet.",
+    items:A.filter(a=>{const ms=epochMs(a[tbK]);return onFarm(a)&&(ms==null||daysAgo(ms)>330);}),tmpl:n=>`${n} due a TB test`});
+  // scanning due (book / info)
+  if(serveK)add({id:"scan",group:"book",level:"info",kind:"animals",title:"__",why:"Served over 12 weeks ago — ready to confirm in-calf.",
+    items:A.filter(a=>{const ms=epochMs(a[serveK]);const scanned=scanK&&a[scanK]!=null&&a[scanK]!=="";return onFarm(a)&&ms!=null&&daysAgo(ms)>84&&!scanned;}),tmpl:n=>`${n} to scan for pregnancy`});
+  // under withdrawal (watch / alert)
+  if(sig.withdrawalUntil.size)add({id:"withdraw",group:"watch",level:"alert",kind:"animals",title:"__",why:"Do not sell or slaughter until the withdrawal period clears.",
+    items:A.filter(a=>{const ms=sig.withdrawalUntil.get(a);return ms!=null&&ms>now;}),tag:a=>"clear "+fmtDate(sig.withdrawalUntil.get(a)),tmpl:n=>`${n} under withdrawal`});
+  // calving due soon (watch / info)
+  if(calvK)add({id:"calve",group:"watch",level:"info",kind:"animals",title:"__",why:"Estimated calving within three weeks — ready the pen.",
+    items:A.filter(a=>{const ms=epochMs(a[calvK]);return onFarm(a)&&ms!=null&&ms>now&&daysAgo(ms)>-21;}),tmpl:n=>`${n} due to calve within 3 weeks`});
+  recs.forEach(r=>{if(r.tmpl)r.title=r.tmpl(r.count);});
+  const lvl={alert:0,good:1,info:2};
+  return recs.sort((a,b)=>lvl[a.level]-lvl[b.level]);
+}
+const REC_GROUPS=[
+  {id:"now",label:"Do now",sub:"in-house",icon:'<svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>'},
+  {id:"book",label:"Book the vet",sub:"schedule ahead",icon:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>'},
+  {id:"watch",label:"Keep an eye on",sub:"no action yet",icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'}
+];
+/* ---------- local reminders (write-adapter seam for future Herdwatch write-back) ---------- */
+const REM_KEY="herd:reminders";
+function loadRems(){try{return JSON.parse(localStorage.getItem(REM_KEY)||"[]");}catch(e){return [];}}
+function saveRems(r){try{localStorage.setItem(REM_KEY,JSON.stringify(r));}catch(e){}}
+/* writeAdapter: today reminders live on the device. When Herdwatch write endpoints
+   are known, swap these bodies to POST and keep the same call sites. */
+const writeAdapter={
+  createReminder(title,animals,due){
+    const r=loadRems();
+    r.push({id:"r"+Date.now()+Math.random().toString(16).slice(2,6),title:title||"Reminder",
+      animals:(animals||[]).map(a=>String(tagOf(a))).slice(0,60),due:due||null,done:false,createdAt:Date.now()});
+    saveRems(r); return true;
+  },
+  setDone(id,done){const r=loadRems();const it=r.find(x=>x.id===id);if(it){it.done=done;saveRems(r);}},
+  remove(id){saveRems(loadRems().filter(x=>x.id!==id));}
+};
+function reminderTasks(){
+  return loadRems().map(r=>({id:r.id,title:r.title,dueDate:r.due?{date:r.due}:null,
+    status:r.done?"done":"open",__reminder:true,animals:r.animals}));
+}
+function toast(msg){
+  let t=$("#toast"); if(!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t);}
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2200);
+}
 function computeHome(){
   const A=DATA.animals||[];
   const ages=A.map(a=>{const ms=F.dob?epochMs(a[F.dob]):null;return ms==null?null:(now-ms)/(365.25*86400000);}).filter(x=>x!=null);
@@ -720,34 +898,88 @@ function computeHome(){
     ageSeries,avgAge,oldest,pctFemale,mobs:(DATA.mobs||[]).length,paddocks:(DATA.paddocks||[]).length,tasksTotal:T.length,overdue,records};
 }
 function statCell(v,k){return `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`;}
+let HOME_RECS={};
+function greeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Good afternoon":"Good evening";}
+function recTags(r){
+  if(r.kind==="tasks")return r.items.slice(0,3).map(t=>{const i=taskInfo(t);return `<span class="tg${i.overdue?" due":""}">${esc(clip(i.title,16))}</span>`;}).join("");
+  const shown=r.items.slice(0,4).map(a=>`<span class="tg${r.tag?" due":""}">${esc(r.tag?r.tag(a):String(tagOf(a)))}</span>`);
+  if(r.items.length>4)shown.push(`<span class="tg">+${r.items.length-4}</span>`);
+  return shown.join("");
+}
+function recCard(r){
+  const acts=r.kind==="tasks"
+    ? `<button class="ract primary" data-act="opentasks">Open tasks</button>`
+    : `<button class="ract primary" data-act="view">View animals</button><button class="ract" data-act="remind">Create reminder</button><button class="ract ask" data-act="ask"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Ask</button>`;
+  return `<div class="rec ${r.level}" data-rec="${esc(r.id)}">
+    <div class="rtop"><div class="rtitle">${esc(r.title)}</div><div class="rcount">${r.count}</div></div>
+    <div class="rwhy">${esc(r.why)}</div>
+    <div class="rtags">${recTags(r)}</div>
+    <div class="racts">${acts}<button class="ract dismiss" data-act="dismiss" title="Mark handled">Handled</button></div>
+  </div>`;
+}
 function renderHome(){
+  const recs=computeRecs();
+  HOME_RECS={}; recs.forEach(r=>HOME_RECS[r.id]=r);
   const h=computeHome();
-  let speciesLine=h.species.length?h.species.map(s=>`${s.value} ${String(s.label).toLowerCase()}`).join(" · "):"animals";
-  if(CFG.syncedAt)speciesLine+=` · ${CFG.live?"synced":"offline copy from"} ${fmtWhen(CFG.syncedAt)}`;
-  let attn="";
-  if(h.overdue.length) attn=`<button class="attn" data-go="tasks" data-task="overdue">${h.overdue.length} task${h.overdue.length>1?"s":""} overdue — ${esc(clip(h.overdue[0].title,40))}</button>`;
-  else if(h.tasksTotal) attn=`<div class="attn ok">Nothing overdue — ${h.tasksTotal} task${h.tasksTotal>1?"s":""} on the books</div>`;
-  const stats=[
-    statCell(h.avgAge!=null?h.avgAge+"y":"—","Avg age"),
-    statCell(h.oldest!=null?h.oldest+"y":"—","Oldest"),
-    h.pctFemale!=null?statCell(h.pctFemale+"%","Female"):statCell(h.mobs||"—","Mobs"),
-    statCell(h.paddocks||"—","Paddocks")
-  ].join("");
+  let statusLine=`${h.total} animals`;
+  const cows=(DATA.animals||[]).filter(isFemaleish).length; if(cows&&cows<h.total)statusLine+=` · ${cows} cows`;
+  if(CFG.syncedAt)statusLine+=` · ${CFG.live?"synced":"offline copy from"} ${fmtWhen(CFG.syncedAt)}`;
+  // rules-derived brief (no LLM required)
+  const nowCount=recs.filter(r=>r.group==="now").length;
+  const alerts=recs.filter(r=>r.level==="alert");
+  let brief= recs.length
+    ? `<b>${nowCount?`${nowCount} thing${nowCount>1?"s":""} to do today`:"Nothing urgent in-house"}.</b> ${alerts.length?`${alerts.length} flagged — ${esc(clip(alerts[0].title,44))}.`:"Nothing flagged."}`
+    : `<b>All clear.</b> Nothing needs your attention right now.`;
+  // groups
+  let groupsHtml="";
+  REC_GROUPS.forEach(g=>{
+    const rs=recs.filter(r=>r.group===g.id); if(!rs.length)return;
+    groupsHtml+=`<div class="rgroup"><div class="rghead"><div class="ic ${g.id}">${g.icon}</div><div class="t">${g.label}</div><div class="sub">${g.sub} · ${rs.length}</div></div>${rs.map(recCard).join("")}</div>`;
+  });
+  // suggested questions from the recs
+  const chips=["What needs my attention today?"].concat(recs.slice(0,2).map(r=>`Tell me about: ${r.title.replace(/^\d+\s*/,"")}`));
+  // demoted charts
+  const stats=[statCell(h.avgAge!=null?h.avgAge+"y":"—","Avg age"),statCell(h.oldest!=null?h.oldest+"y":"—","Oldest"),
+    h.pctFemale!=null?statCell(h.pctFemale+"%","Female"):statCell(h.mobs||"—","Mobs"),statCell(h.paddocks||"—","Paddocks")].join("");
   const secondary=(h.secondary&&h.secondary.series.length)?`<div class="card"><h3>${esc(h.secondary.title)}</h3>${chartSVG("pie",h.secondary.series)}</div>`:"";
   const records=h.records.length?`<div class="card"><h3>Records</h3><div class="reclist">${h.records.map(r=>`<button class="recitem" data-go="${esc(r.key)}"><span>${esc(r.label)}</span><span class="c">${r.count}</span></button>`).join("")}</div></div>`:"";
   $("#viewHome").innerHTML=`
     <div class="home">
-      <div class="hero"><div class="big">${h.total}</div><div class="sub">${esc(speciesLine)}</div></div>
-      ${attn}
-      <div class="stats">${stats}</div>
-      <div class="two">
-        <div class="card"><h3>Breeds</h3>${chartSVG("pie",h.breeds)}</div>
-        ${secondary}
-      </div>
-      <div class="card"><h3>Age profile</h3>${chartSVG("bar",h.ageSeries)}</div>
-      ${records}
+      <div><div class="hgreet">${greeting()}</div><div class="hstatus">${esc(statusLine)}</div></div>
+      <div class="hbrief"><div class="spark">✦</div><p>${brief}</p></div>
+      <button class="askbar" id="homeAsk"><span class="q">Ask about your herd…</span><span class="go"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg></span></button>
+      <div class="hchips">${chips.map(c=>`<button class="hchip" data-ask="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+      ${groupsHtml}
+      <details class="bynum">
+        <summary>By the numbers <span class="cv">breeds · ages · mobs ›</span></summary>
+        <div class="bbody">
+          <div class="stats">${stats}</div>
+          <div class="two"><div class="card"><h3>Breeds</h3>${chartSVG("pie",h.breeds)}</div>${secondary}</div>
+          <div class="card"><h3>Age profile</h3>${chartSVG("bar",h.ageSeries)}</div>
+          ${records}
+        </div>
+      </details>
     </div>`;
-  $("#viewHome").querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.task)STATE.taskFilter=b.dataset.task;switchTo(b.dataset.go);}));
+  const host=$("#viewHome");
+  host.querySelector("#homeAsk").addEventListener("click",()=>openChat());
+  host.querySelectorAll("[data-ask]").forEach(b=>b.addEventListener("click",()=>openChat(b.dataset.ask)));
+  host.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>switchTo(b.dataset.go)));
+  host.querySelectorAll(".rec").forEach(card=>{
+    const rec=HOME_RECS[card.dataset.rec];
+    card.querySelectorAll("[data-act]").forEach(b=>b.addEventListener("click",()=>recAction(b.dataset.act,rec)));
+  });
+}
+function recAction(act,rec){
+  if(!rec)return;
+  if(act==="opentasks"){switchTo("tasks",{taskFilter:"overdue"});return;}
+  if(act==="view"){switchTo("animals",{recSet:rec.items,recLabel:rec.title});return;}
+  if(act==="remind"){writeAdapter.createReminder(rec.title,rec.items);buildNav();toast("Reminder added — see Tasks");return;}
+  if(act==="ask"){
+    const tags=rec.kind==="tasks"?rec.items.map(t=>taskInfo(t).title):rec.items.map(a=>String(tagOf(a)));
+    openChat(`About "${rec.title}" (${tags.slice(0,20).join(", ")}) — what should I do, and what's involved?`);
+    return;
+  }
+  if(act==="dismiss"){const h=loadHandled();if(!h.includes(rec.id)){h.push(rec.id);saveHandled(h);}renderHome();toast("Marked handled");}
 }
 function rowContent(item,btn){
   const frag=document.createElement("div");
@@ -773,8 +1005,9 @@ function rowContent(item,btn){
     const i=taskInfo(item);
     if(i.overdue&&btn)btn.classList.add("overdue");
     const meta=[];
+    if(item.__reminder)meta.push(`<span style="color:var(--accent)">Reminder</span>`);
     if(i.dueMs!==null)meta.push(`<span class="${i.overdue?"alert":""}">${i.overdue?"Overdue · ":""}${fmtDate(i.dueMs)}</span>`);
-    if(i.statusText)meta.push(`<span>${esc(i.statusText)}</span>`);
+    if(i.statusText&&!item.__reminder)meta.push(`<span>${esc(i.statusText)}</span>`);
     frag.innerHTML=`<div><span class="nm">${esc(i.title)}</span></div><div class="meta">${meta.join("")}</div>`;
   }else{
     const nameK=keyLike(item,/name|title/i)||"id";
@@ -848,8 +1081,14 @@ function renderDetail(){
     const cb=$("#showAll");if(cb)cb.addEventListener("change",e=>{STATE.showAll=e.target.checked;renderDetail();});
     return;
   }
-  host.innerHTML=head+details+`<div style="height:24px"></div>`;
+  let remBar="";
+  if(item.__reminder)remBar=`<div class="racts" style="padding:12px 18px 0"><button class="ract primary" id="remDone">${item.status==="done"?"Reopen":"Mark done"}</button><button class="ract" id="remDel">Delete</button></div>`;
+  host.innerHTML=head+remBar+details+`<div style="height:24px"></div>`;
   const cb=$("#showAll");if(cb)cb.addEventListener("change",e=>{STATE.showAll=e.target.checked;renderDetail();});
+  if(item.__reminder){
+    const d=$("#remDone");if(d)d.onclick=()=>{writeAdapter.setDone(item.id,item.status!=="done");STATE.selected=null;document.body.classList.remove("mobiledetail");render();toast("Reminder updated");};
+    const x=$("#remDel");if(x)x.onclick=()=>{writeAdapter.remove(item.id);STATE.selected=null;document.body.classList.remove("mobiledetail");buildNav();render();toast("Reminder deleted");};
+  }
 }
 /* progeny + history are derived by matching other records back to this animal's identifiers */
 function idsOf(a){
@@ -1022,12 +1261,14 @@ Promise.all([
       </select>
     </label>
     <label>API endpoint (advanced — point at a proxy to keep your key off the device)<input id="endpointInp" placeholder="https://api.anthropic.com/v1/messages"></label>
+    <label class="ckrow"><input type="checkbox" id="speakChk"> Read answers aloud</label>
     <p class="hint" style="margin:0">Your key stays in memory and isn't saved. Requests are billed to your Anthropic account. Herd data stays on this device — only your questions and small results are sent.</p>
   </div>
   <div class="cmsgs" id="chatMsgs"></div>
   <div class="suggest" id="chatSuggest"></div>
   <div class="ccompose">
-    <textarea id="chatInput" rows="1" placeholder="Ask about the herd…"></textarea>
+    <textarea id="chatInput" rows="1" placeholder="Ask, or tap the mic…"></textarea>
+    <button id="chatMic" class="micbtn hidden" title="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/></svg></button>
     <button id="chatSend">Send</button>
   </div>
 </div>
@@ -1053,6 +1294,13 @@ Promise.all([
   .ccompose textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;max-height:120px;background:var(--paper);color:var(--ink)}
   .ccompose textarea:focus{outline:none;border-color:var(--accent)}
   .ccompose button{border:none;background:var(--accent);color:#fff;border-radius:12px;padding:0 16px;font-weight:650;cursor:pointer}
+  .ccompose .micbtn{background:var(--card);border:1px solid var(--line);color:var(--accent);padding:0;width:44px;flex:none;display:flex;align-items:center;justify-content:center}
+  .ccompose .micbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ccompose .micbtn.live{background:var(--alert);border-color:var(--alert);color:#fff;animation:micpulse 1.1s ease-in-out infinite}
+  @keyframes micpulse{0%,100%{opacity:1}50%{opacity:.55}}
+  @media(prefers-reduced-motion:reduce){.ccompose .micbtn.live{animation:none}}
+  .csettings label.ckrow{flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+  .csettings label.ckrow input{width:16px;height:16px;accent-color:var(--accent)}
   .csettings{padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card);display:none;flex-direction:column;gap:8px}
   .csettings.open{display:flex}
   .csettings label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
@@ -1064,7 +1312,7 @@ Promise.all([
 <script>
 "use strict";
 /* ===== LLM chat: reuses DATA, LOOKUP, F, disp, epochMs, tagOf, esc, $, now, CFG from the main script ===== */
-CFG.apiKey=""; CFG.model="claude-sonnet-5"; CFG.llmEndpoint="https://api.anthropic.com/v1/messages";
+CFG.apiKey=""; CFG.model="claude-sonnet-5"; CFG.llmEndpoint="https://api.anthropic.com/v1/messages"; CFG.speak=false;
 const chatState={open:false,briefed:false,busy:false,msgs:[]};
 
 /* ---- local query engine over the loaded herd ---- */
@@ -1187,8 +1435,24 @@ function buildTools(){
        title:{type:"string"},
        type:{type:"string",enum:["bar","pie","line"]},
        query:{type:"object",properties:{entity:{type:"string"},where:{type:"array",items:{type:"object"}},groupBy:{type:"string"},metric:{type:"object"}}}
-     }}}
+     }}},
+    {name:"open_animal",description:"Open one animal's full record in the app (navigates the herd view under the chat). Use when the user wants to look at a specific animal.",
+     input_schema:{type:"object",required:["tag"],properties:{tag:{type:"string",description:"The animal's tag or id."}}}},
+    {name:"filter_herd",description:"Show a filtered subset of the herd in the app's list (navigates under the chat). Same filter format as query_herd's where.",
+     input_schema:{type:"object",properties:{where:{type:"array",items:{type:"object",properties:{field:{type:"string"},op:{type:"string"},value:{}}}},label:{type:"string",description:"Short label describing what's shown."}}}},
+    {name:"create_reminder",description:"Create a to-do reminder for the farmer, saved on the device and shown under Tasks.",
+     input_schema:{type:"object",required:["title"],properties:{title:{type:"string"},tags:{type:"array",items:{type:"string"},description:"Optional animal tags this reminder concerns."}}}},
+    {name:"mark_done",description:"Mark a local reminder done, matched by its title.",
+     input_schema:{type:"object",required:["title"],properties:{title:{type:"string"}}}},
+    {name:"show_recommendations",description:"Open the home screen recommendations, optionally one group. Returns the current recommendation list computed on-device.",
+     input_schema:{type:"object",properties:{group:{type:"string",enum:["now","book","watch"]}}}}
   ];
+}
+function findAnimal(ref){
+  ref=String(ref).toLowerCase();
+  const A=DATA.animals||[];
+  return A.find(a=>String(tagOf(a)).toLowerCase()===ref||String(a.id).toLowerCase()===ref)
+      || A.find(a=>[...idsOf(a)].some(k=>String(k).toLowerCase()===ref));
 }
 function runTool(name,input){
   try{
@@ -1199,6 +1463,36 @@ function runTool(name,input){
       const series=input.data||(runQuery(q).groups||[]).map(x=>({label:x.group,value:x.value}));
       renderChartBubble(input.title||"Chart",input.type||"bar",series);
       return {rendered:true,title:input.title,points:series.slice(0,20)};
+    }
+    if(name==="open_animal"){
+      const a=findAnimal(input.tag); if(!a)return {error:"no animal matching "+input.tag};
+      STATE.recSet=null;STATE.recLabel="";STATE.selected=a;STATE.detailTab="details";
+      STATE.view="list";STATE.tab="animals";STATE.q="";STATE.filters={};
+      document.body.classList.add("mobiledetail");render();
+      return {opened:String(tagOf(a))};
+    }
+    if(name==="filter_herd"){
+      const animals=(DATA.animals||[]).filter(a=>animalMatches(a,input.where||[]));
+      STATE.recSet=animals;STATE.recLabel=input.label||"Filtered by the assistant";
+      STATE.view="list";STATE.tab="animals";STATE.q="";STATE.filters={};STATE.selected=null;
+      document.body.classList.remove("mobiledetail");render();
+      return {shown:animals.length,of:(DATA.animals||[]).length,sample:animals.slice(0,20).map(a=>String(tagOf(a)))};
+    }
+    if(name==="create_reminder"){
+      const animals=(input.tags||[]).map(findAnimal).filter(Boolean);
+      writeAdapter.createReminder(input.title,animals); buildNav();
+      return {created:input.title,animals:animals.length};
+    }
+    if(name==="mark_done"){
+      const it=loadRems().find(r=>r.title.toLowerCase().includes(String(input.title||"").toLowerCase()));
+      if(!it)return {error:"no reminder matching "+input.title};
+      writeAdapter.setDone(it.id,true); if(STATE.view==="list"&&STATE.tab==="tasks")render();
+      return {done:it.title};
+    }
+    if(name==="show_recommendations"){
+      const recs=computeRecs().filter(r=>!input.group||r.group===input.group);
+      STATE.view="home";render();
+      return {recommendations:recs.map(r=>({group:r.group,title:r.title,count:r.count}))};
     }
     return {error:"unknown tool "+name};
   }catch(e){return {error:String(e&&e.message||e)};}
@@ -1217,6 +1511,7 @@ function buildSystem(){
     `Date fields (epoch ms): ${dateFields.join(", ")||"none"}. Coded fields resolved to plain names: ${enumFields.join(", ")||"none"}.`,
     `Derived numeric fields you can filter or aggregate: ageYears, ageMonths (from ${F.dob||"date of birth"}).`,
     `Use query_herd for every number — do not guess counts. Use make_chart for distributions and comparisons. Refer to animals by their ${F.tag||"tag"}. Resolve codes to plain names in your replies.`,
+    `You can also act in the app: open_animal (show one animal), filter_herd (show a subset), create_reminder and mark_done (the farmer's on-device to-dos), and show_recommendations (the home screen's on-device jobs list, grouped into do-now / book-the-vet / keep-an-eye-on). When the user asks to see or do one of these, call the tool rather than only describing it, then confirm briefly.`,
     `Be concise and useful to a working farmer: lead with anything needing action (overdue tasks, breeding/health gaps, ageing stock), then the rest. Keep replies short.`
   ].join(" ");
 }
@@ -1245,7 +1540,7 @@ async function llmTurn(){
       const data=await callAPI(chatState.msgs);
       if(!removed){think.remove();removed=true;}
       chatState.msgs.push({role:"assistant",content:data.content});
-      for(const b of data.content){ if(b.type==="text"&&b.text.trim()) addBubble("assistant",mdLite(b.text)); }
+      for(const b of data.content){ if(b.type==="text"&&b.text.trim()){ addBubble("assistant",mdLite(b.text)); speak(b.text); } }
       const tools=data.content.filter(b=>b.type==="tool_use");
       if(!tools.length||data.stop_reason!=="tool_use")break;
       const results=tools.map(tu=>({type:"tool_result",tool_use_id:tu.id,content:JSON.stringify(runTool(tu.name,tu.input))}));
@@ -1277,26 +1572,60 @@ function briefing(){
 
 /* ---- settings + open/close ---- */
 function openSettings(on){$("#chatSettings").classList.toggle("open",on!==undefined?on:!$("#chatSettings").classList.contains("open"));}
-function openChat(){
+function openChat(seed){
   $("#chat").classList.add("open"); chatState.open=true;
-  if(!CFG.apiKey){ openSettings(true); if(!$("#chatMsgs").children.length) addBubble("assistant","Hi — add your Anthropic API key above and I'll brief you on the herd and answer questions. Your data stays on this device."); }
+  if(!CFG.apiKey){
+    openSettings(true);
+    if(!$("#chatMsgs").children.length) addBubble("assistant","Hi — add your Anthropic API key above and I'll brief you on the herd and answer questions. Your data stays on this device.");
+    if(seed)chatState.pendingSeed=seed;   // send it once a key is added
+    return;
+  }
+  if(seed){ send(seed); }
   else briefing();
 }
 const SUGGEST=["Anything I should act on?","Breed breakdown chart","Which cows are dry?","Oldest 5 animals","Ages by breed"];
 
+/* ---- voice: read answers aloud (SpeechSynthesis) and dictate (SpeechRecognition) ---- */
+function speak(text){
+  if(!CFG.speak||!("speechSynthesis" in window))return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g,"")); u.rate=1.02; speechSynthesis.speak(u); }catch(e){}
+}
+function setupVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const mic=$("#chatMic"); const inp=$("#chatInput");
+  if(!SR||!mic){ return; }                          // no dictation API → keyboard mic still works, hide button
+  mic.classList.remove("hidden");
+  let rec=null,live=false;
+  mic.addEventListener("click",()=>{
+    if(live){ try{rec.stop();}catch(e){} return; }
+    try{
+      rec=new SR(); rec.lang=navigator.language||"en-IE"; rec.interimResults=true; rec.continuous=false;
+      const base=inp.value?inp.value.trim()+" ":"";
+      rec.onresult=e=>{let s="";for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript;
+        inp.value=base+s; inp.style.height="auto"; inp.style.height=Math.min(120,inp.scrollHeight)+"px";};
+      rec.onstart=()=>{live=true;mic.classList.add("live");};
+      rec.onend=()=>{live=false;mic.classList.remove("live");inp.focus();};
+      rec.onerror=()=>{live=false;mic.classList.remove("live");};
+      rec.start();
+    }catch(e){ live=false; mic.classList.remove("live"); }
+  });
+}
 /* ---- wire up ---- */
 (function(){
   $("#askBtn").addEventListener("click",openChat);
-  $("#chatClose").addEventListener("click",()=>{$("#chat").classList.remove("open");chatState.open=false;});
+  $("#chatClose").addEventListener("click",()=>{$("#chat").classList.remove("open");chatState.open=false;if("speechSynthesis" in window)speechSynthesis.cancel();});
   $("#chatSettingsBtn").addEventListener("click",()=>openSettings());
-  $("#apiKey").addEventListener("input",e=>{CFG.apiKey=e.target.value.trim();});
+  $("#apiKey").addEventListener("input",e=>{CFG.apiKey=e.target.value.trim();
+    if(CFG.apiKey&&chatState.pendingSeed){const s=chatState.pendingSeed;chatState.pendingSeed=null;setTimeout(()=>send(s),50);}});
   $("#modelSel").addEventListener("change",e=>{CFG.model=e.target.value;});
   $("#endpointInp").addEventListener("input",e=>{CFG.llmEndpoint=e.target.value.trim()||"https://api.anthropic.com/v1/messages";});
+  const sc=$("#speakChk"); if(sc)sc.addEventListener("change",e=>{CFG.speak=e.target.checked;if(!CFG.speak&&"speechSynthesis" in window)speechSynthesis.cancel();});
   const inp=$("#chatInput");
   inp.addEventListener("input",()=>{inp.style.height="auto";inp.style.height=Math.min(120,inp.scrollHeight)+"px";});
   inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();const v=inp.value;inp.value="";inp.style.height="auto";send(v);}});
   $("#chatSend").addEventListener("click",()=>{const v=inp.value;inp.value="";inp.style.height="auto";send(v);});
   const sg=$("#chatSuggest"); SUGGEST.forEach(s=>{const b=document.createElement("button");b.textContent=s;b.addEventListener("click",()=>send(s));sg.appendChild(b);});
+  setupVoice();
 })();
 </script>
 </body>
