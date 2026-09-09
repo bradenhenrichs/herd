@@ -58,6 +58,11 @@
   .row.on{background:var(--accent-weak)}
   .row .tag{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:-.02em}
   .row .nm{font-weight:600;margin-left:8px}
+  .row .rowline{display:flex;align-items:baseline;gap:8px}
+  .row .rowline .nm{margin-left:0}
+  .row .stbadge{margin-left:auto;flex:none;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--paper)}
+  .row .stbadge.good{background:var(--accent-weak);border-color:transparent;color:var(--accent)}
+  .row.overdue{box-shadow:inset 3px 0 0 var(--alert)}
   .row .meta{margin-top:3px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 14px}
   .row .alert{color:var(--alert);font-weight:600}
   .count{padding:8px 14px;color:var(--muted);font-size:12.5px;flex:none;border-bottom:1px solid var(--line)}
@@ -75,7 +80,9 @@
   .kv dd.mono{font-family:var(--mono);font-size:14px}
   .showall{display:flex;align-items:center;gap:7px;padding:10px 18px 2px;font-size:13px;color:var(--muted)}
   .showall input{width:16px;height:16px;accent-color:var(--accent)}
-  dl.hide-empty .kv.empty{display:none}
+  .dsect h4{margin:18px 18px 0;font-size:12.5px;font-weight:650;color:var(--accent)}
+  .dbody.hide-empty .kv.empty{display:none}
+  .dbody.hide-empty .dsect.allempty{display:none}
   .back{display:none;margin:0;padding:10px 14px;background:var(--card);border:none;border-bottom:1px solid var(--line);color:var(--accent);font-weight:600;width:100%;text-align:left}
 
   .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;color:var(--muted);gap:14px;overflow:auto}
@@ -307,11 +314,35 @@ async function sync(){
   CFG.farm=farm;CFG.profile=boot;
   const ref =await post("api/2/get",{HWKEY:CFG.token,farm,system_type:true, lastSync:0});
   const data=await post("api/2/get",{HWKEY:CFG.token,farm,system_type:false,lastSync:0});
+  CFG.syncedAt=Date.now();
+  saveCache(boot,ref,data);
   ingest([ref,data]);
+}
+
+/* ---------- offline copy of the last sync (data only — never tokens or credentials) ---------- */
+const SYNC_CACHE_KEY="herd:lastSync";
+function saveCache(profile,ref,data){
+  if(CFG.isDemo)return; // don't let the demo herd overwrite a real farm's offline copy
+  try{localStorage.setItem(SYNC_CACHE_KEY,JSON.stringify({when:CFG.syncedAt,profile,payloads:[ref,data]}));}
+  catch(e){try{localStorage.removeItem(SYNC_CACHE_KEY);}catch(_){}} // quota — an offline copy is best-effort
+}
+function loadCachedSync(){
+  try{const j=JSON.parse(localStorage.getItem(SYNC_CACHE_KEY)||"null");return (j&&Array.isArray(j.payloads))?j:null;}
+  catch(e){return null;}
+}
+function openCachedSync(){
+  const c=loadCachedSync();if(!c)return false;
+  CFG.live=false;CFG.profile=c.profile;CFG.syncedAt=c.when;
+  try{ingest(c.payloads);}catch(e){return false;}
+  return true;
+}
+function fmtWhen(ms){
+  const d=new Date(ms);if(isNaN(d))return "";
+  return d.toLocaleDateString(undefined,{day:"2-digit",month:"short"})+", "+d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
 }
 async function connect(creds){
   CFG.deviceId=CFG.deviceId||("cli-"+((crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(16).slice(2)));
-  CFG.creds=creds;CFG.live=true;
+  CFG.creds=creds;CFG.live=true;CFG.isDemo=creds.password==="demo1234";
   CFG.token=await login(creds);
   await sync();
 }
@@ -404,7 +435,7 @@ function renderList(){
   const items=list.filter(matchRow);
   $("#count").textContent=`${items.length} of ${list.length}`;
   const rows=$("#rows");rows.innerHTML="";
-  items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item));
+  items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item,b));
     b.onclick=()=>{STATE.selected=item;document.body.classList.add("mobiledetail");render();};rows.appendChild(b);});
   renderDetail();
 }
@@ -438,7 +469,8 @@ function computeHome(){
 function statCell(v,k){return `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`;}
 function renderHome(){
   const h=computeHome();
-  const speciesLine=h.species.length?h.species.map(s=>`${s.value} ${String(s.label).toLowerCase()}`).join(" · "):"animals";
+  let speciesLine=h.species.length?h.species.map(s=>`${s.value} ${String(s.label).toLowerCase()}`).join(" · "):"animals";
+  if(CFG.syncedAt)speciesLine+=` · ${CFG.live?"synced":"offline copy from"} ${fmtWhen(CFG.syncedAt)}`;
   let attn="";
   if(h.overdue.length) attn=`<button class="attn" data-go="tasks">${h.overdue.length} task${h.overdue.length>1?"s":""} overdue — ${esc(clip(h.overdue[0].title,40))}</button>`;
   else if(h.tasksTotal) attn=`<div class="attn ok">Nothing overdue — ${h.tasksTotal} task${h.tasksTotal>1?"s":""} on the books</div>`;
@@ -464,21 +496,24 @@ function renderHome(){
     </div>`;
   $("#viewHome").querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>switchTo(b.dataset.go)));
 }
-function rowContent(item){
+function rowContent(item,btn){
   const frag=document.createElement("div");
   if(STATE.tab==="animals"){
     const tag=tagOf(item);
     const nm=F.name&&item[F.name]?`<span class="nm">${esc(item[F.name])}</span>`:"";
+    const stTxt=F.status&&item[F.status]?disp(item[F.status]):"";
+    const good=/on.?farm|active|alive|present|current/i.test(stTxt);
+    const badge=stTxt?`<span class="stbadge${good?" good":""}">${esc(stTxt)}</span>`:"";
     const bits=[];
     if(F.sex&&item[F.sex])bits.push(esc(disp(item[F.sex])));
     if(F.breed&&item[F.breed])bits.push(esc(disp(item[F.breed])));
-    if(F.dob&&epochMs(item[F.dob])!==null){const ms=epochMs(item[F.dob]);bits.push(`${fmtDate(ms)} · ${ageFrom(ms)}`);}
-    if(F.status&&item[F.status])bits.push(esc(disp(item[F.status])));
-    frag.innerHTML=`<div><span class="tag">${esc(String(tag))}</span>${nm}</div><div class="meta">${bits.map(x=>`<span>${x}</span>`).join("")}</div>`;
+    if(F.dob&&epochMs(item[F.dob])!==null){const ms=epochMs(item[F.dob]);const age=ageFrom(ms);bits.push(age?age:fmtDate(ms));}
+    frag.innerHTML=`<div class="rowline"><span class="tag">${esc(String(tag))}</span>${nm}${badge}</div><div class="meta">${bits.map(x=>`<span>${x}</span>`).join("")}</div>`;
   }else if(STATE.tab==="tasks"){
     const titleK=keyLike(item,/title|name|desc/i)||"id",dueK=keyLike(item,/due|date/i),statusK=keyLike(item,/status|state/i);
     const dueMs=dueK?epochMs(item[dueK]):null;
     const overdue=dueMs!==null&&dueMs<now&&!/done|closed|complete/i.test(disp(item[statusK]||""));
+    if(overdue&&btn)btn.classList.add("overdue");
     const meta=[];
     if(dueMs!==null)meta.push(`<span class="${overdue?"alert":""}">${overdue?"Overdue · ":""}${fmtDate(dueMs)}</span>`);
     if(statusK&&item[statusK])meta.push(`<span>${esc(disp(item[statusK]))}</span>`);
@@ -512,21 +547,46 @@ function renderDetail(){
     .filter((k,i,a)=>k&&keys.includes(k)&&a.indexOf(k)===i);
   const ordered=pri.concat(keys.filter(k=>!pri.includes(k)));
   const isEmpty=v=>v===null||v===undefined||v===""||(Array.isArray(v)&&!v.length);
-  let rows="";
-  for(const k of ordered){
-    if(k==="id"&&STATE.tab==="animals"&&F.tag&&F.tag!=="id")continue;
+  const fieldRow=k=>{
     const v=item[k];
     const empty=isEmpty(v);
     if(v&&typeof v==="object"&&epochMs(v)===null){
       const inner=Object.entries(v).map(([ik,iv])=>`${humanize(ik)}: ${esc(disp(iv,ik))}`).join("; ");
-      rows+=kvRow(humanize(k),inner||"—",false,empty);continue;
+      return {html:kvRow(humanize(k),inner||"—",false,empty),empty};
     }
     const isTagLike=/tag|ear|^id$|number/i.test(k)&&epochMs(v)===null;
-    rows+=kvRow(humanize(k),esc(disp(v,k)),isTagLike&&typeof v!=="object",empty);
+    return {html:kvRow(humanize(k),esc(disp(v,k)),isTagLike&&typeof v!=="object",empty),empty};
+  };
+  let body="";
+  if(STATE.tab==="animals"){
+    const groups={Identity:[],Breeding:[],Health:[],Movement:[],Other:[]};
+    for(const k of ordered){
+      if(k==="id"&&F.tag&&F.tag!=="id")continue;
+      groups[sectionOf(k)].push(k);
+    }
+    body=Object.entries(groups).filter(([,ks])=>ks.length).map(([name,ks])=>{
+      let rows="",allEmpty=true;
+      for(const k of ks){const r=fieldRow(k);rows+=r.html;if(!r.empty)allEmpty=false;}
+      return `<div class="dsect${allEmpty?" allempty":""}"><h4>${name}</h4><dl>${rows}</dl></div>`;
+    }).join("");
+  }else{
+    let rows="";
+    for(const k of ordered)rows+=fieldRow(k).html;
+    body=`<dl>${rows}</dl>`;
   }
   const toggle=`<label class="showall"><input type="checkbox" id="showAll" ${STATE.showAll?"checked":""}> Show empty fields</label>`;
-  host.innerHTML=head+toggle+`<dl class="${STATE.showAll?"":"hide-empty"}">${rows}</dl><div style="height:24px"></div>`;
+  host.innerHTML=head+toggle+`<div class="dbody ${STATE.showAll?"":"hide-empty"}">${body}</div><div style="height:24px"></div>`;
   const cb=$("#showAll");if(cb)cb.addEventListener("change",e=>{STATE.showAll=e.target.checked;renderDetail();});
+}
+/* section an animal's fields by name pattern; detected headline fields are pinned to their group */
+function sectionOf(k){
+  if([F.tag,F.name,F.sex,F.breed,F.dob,F.status].includes(k)||/^(id|species|notes)$/i.test(k))return "Identity";
+  if(k===F.mob)return "Movement";
+  if(/calv|serv|sire|dam|preg|scan|insemin|heat|bull|wean|dry.?off|lactat|milk|breeding|embryo|mating|bred/i.test(k))return "Breeding";
+  if(/treat|medic|vaccin|health|disease|tb|test|withdraw|dose|weigh|condition|bcs|remedy|vet|illness|injur/i.test(k))return "Health";
+  if(/mob|paddock|field|location|mov|purchase|sale|sold|arriv|depart|bought|entry|exit|disposal|death|died|cull|export|import|origin|destin/i.test(k))return "Movement";
+  if(/tag|ear|name|sex|gender|breed|dob|birth|colou?r|eid|dna|genotype|regist|passport|cts|bcms|icbf|herd|status/i.test(k))return "Identity";
+  return "Other";
 }
 function kvRow(k,v,mono,empty){return `<div class="kv${empty?" empty":""}"><dt>${k}</dt><dd class="${mono?"mono":""}">${v}</dd></div>`;}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -590,11 +650,23 @@ drop.addEventListener("drop",e=>loadFiles(e.dataTransfer.files));
   try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){}
 })();
 
+/* offer the offline copy of the last sync, and open it straight away when offline */
+(function(){
+  const c=loadCachedSync();if(!c)return;
+  const b=document.createElement("button");
+  b.className="btn ghost";b.id="useCache";
+  b.textContent="Open last sync — "+fmtWhen(c.when);
+  b.addEventListener("click",()=>{if(!openCachedSync())$("#connErr").textContent="Couldn't open the saved sync — try connecting instead.";});
+  $("#useDemo").after(b);
+})();
+
 /* auto-load JSON if hosted next to the file */
 Promise.all([
   fetch("./farmdata.json").then(r=>r.ok?r.json():Promise.reject()),
   fetch("./reference.json").then(r=>r.ok?r.json():null).catch(()=>null),
-]).then(([fd,ref])=>ingest(ref?[fd,ref]:[fd])).catch(()=>{});
+]).then(([fd,ref])=>ingest(ref?[fd,ref]:[fd])).catch(()=>{
+  if(navigator.onLine===false)openCachedSync();
+});
 </script>
 <div id="chat">
   <div class="chead">

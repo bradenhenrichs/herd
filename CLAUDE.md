@@ -66,10 +66,22 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   build the dashboard (composition + age charts, attention strip for overdue tasks,
   stat strip, records list). `renderList()` + `rowContent()` + `renderDetail()` are
   the herd/records browser (search, filter chips, master-detail). `facets()` builds
-  the filter chips. `switchTo(target)` handles navigation.
+  the filter chips. `switchTo(target)` handles navigation. Animal rows carry a
+  status badge (green `.good` for on-farm-ish statuses, neutral otherwise); overdue
+  task rows get a rust left accent (`.row.overdue`). The animal detail view is
+  sectioned into Identity / Breeding / Health / Movement / Other by `sectionOf(k)`
+  (name-pattern based, with the detected `F.*` headline fields pinned to their
+  group); sections that are entirely empty hide with the "show empty fields" toggle.
 - **Nav:** `buildNav()` renders the same items into `#sidenav` (desktop sidebar) and
   `#bottomnav` (mobile tab bar): Home, Herd, Tasks, Ask.
 - **Live client:** `post()`, `login()`, `sync()`, `connect(creds)`, `refresh()`.
+- **Offline copy:** a successful `sync()` saves `{when, profile, payloads}` to
+  `localStorage` (`herd:lastSync`) via `saveCache()` — **data only, never the token
+  or credentials**, and never for the demo herd. The connect screen grows an
+  "Open last sync — <when>" button when a copy exists (`openCachedSync()`), and the
+  copy auto-opens when the app launches offline. Home's hero shows "synced <when>"
+  live, "offline copy from <when>" when viewing the cache. Saving is best-effort
+  (quota errors clear the key silently).
 - **File mode:** `loadFiles()` accepts dropped `farmdata.json` + `reference.json` for
   offline / no-login use.
 - **Charts:** `chartSVG(type, series)` + `barSVG` / `pieSVG` / `lineSVG` —
@@ -113,11 +125,6 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   (`hwbe.io`, `herdwatch.com`, `api.anthropic.com`).
 
 ## Ideas / roadmap (not yet done)
-- Section the **animal detail view** into Identity / Breeding / Health / Movement
-  groups (currently one long field list with a "show empty fields" toggle).
-- Richer list rows (status accents, clearer hierarchy).
-- **Cache the last sync** for genuine offline herd viewing (the SW caches only the
-  app shell today; live data still needs a connection).
 - Purpose-built views for heavy record types (Reports, Fertilisers) instead of the
   generic list.
 - Optional: a small key-holding proxy so the chat's API key isn't re-entered each
