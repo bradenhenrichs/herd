@@ -66,7 +66,11 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   build the dashboard (composition + age charts, attention strip for overdue tasks,
   stat strip, records list). `renderList()` + `rowContent()` + `renderDetail()` are
   the herd/records browser (search, filter chips, master-detail). `facets()` builds
-  the filter chips. `switchTo(target)` handles navigation. Animal rows carry a
+  the filter chips. `switchTo(target)` handles navigation. `taskInfo(t)` is the one
+  reading of a task (title / due date / status / overdue), shared by the dashboard's
+  attention strip and the task list — keys are resolved **per task** (task records
+  vary by type, so never sample only `tasks[0]`), a `due`-named key beats generic
+  date keys, and created/completed/updated dates are never the deadline. Animal rows carry a
   status badge (green `.good` for on-farm-ish statuses, neutral otherwise); overdue
   task rows get a rust left accent (`.row.overdue`). The animal detail view is
   sectioned into Identity / Breeding / Health / Movement / Other by `sectionOf(k)`

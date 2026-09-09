@@ -446,6 +446,18 @@ function countBy(field){
   A.forEach(a=>{let k=disp(a[field]); if(!k||k==="—")k="Unknown"; g[k]=(g[k]||0)+1;});
   return Object.entries(g).map(([label,value])=>({label,value})).sort((x,y)=>y.value-x.value);
 }
+/* one reading of a task, shared by the dashboard and the task list so they can't disagree.
+   Keys are resolved per task (records vary by type); a due-named key wins over generic
+   date keys, and created/completed/updated dates are never treated as the deadline. */
+function taskInfo(t){
+  const dueK=keyLike(t,/due/i)||Object.keys(t).find(k=>/date|deadline/i.test(k)&&!/creat|complet|updat|modif|finish|done|sync/i.test(k));
+  const stK=keyLike(t,/status|state/i);
+  const tiK=keyLike(t,/title|name|desc/i)||"id";
+  const dueMs=dueK?epochMs(t[dueK]):null;
+  const statusText=(stK&&t[stK])?disp(t[stK]):"";
+  const done=/done|closed|complete/i.test(statusText);
+  return {title:disp(t[tiK]),dueMs,statusText,done,overdue:dueMs!==null&&dueMs<now&&!done};
+}
 function computeHome(){
   const A=DATA.animals||[];
   const ages=A.map(a=>{const ms=F.dob?epochMs(a[F.dob]):null;return ms==null?null:(now-ms)/(365.25*86400000);}).filter(x=>x!=null);
@@ -456,10 +468,8 @@ function computeHome(){
   let pctFemale=null;
   if(F.sex){const fem=A.filter(a=>/female|^f$|cow|heifer/i.test(disp(a[F.sex]))).length; pctFemale=A.length?Math.round(fem/A.length*100):null;}
   const T=DATA.tasks||[]; const overdue=[];
-  if(T.length){const s=T[0],dueK=keyLike(s,/due|date/i),stK=keyLike(s,/status|state/i),tiK=keyLike(s,/title|name|desc/i)||"id";
-    T.forEach(t=>{const ms=dueK?epochMs(t[dueK]):null;const done=/done|closed|complete/i.test(disp(t[stK]||""));if(ms!=null&&ms<now&&!done)overdue.push({title:disp(t[tiK]),due:ms});});
-    overdue.sort((a,b)=>a.due-b.due);
-  }
+  T.forEach(t=>{const i=taskInfo(t);if(i.overdue)overdue.push({title:i.title,due:i.dueMs});});
+  overdue.sort((a,b)=>a.due-b.due);
   const milkK=keyLike(A[0]||{},/milkingstatus|milking|lactat/i);
   const records=Object.keys(DATA).filter(k=>!["animals","tasks","system_type"].includes(k)&&DATA[k].length).map(k=>({key:k,label:humanize(k),count:DATA[k].length}));
   return {total:A.length,species:countBy("species"),breeds:countBy(F.breed||"breed"),
@@ -510,14 +520,12 @@ function rowContent(item,btn){
     if(F.dob&&epochMs(item[F.dob])!==null){const ms=epochMs(item[F.dob]);const age=ageFrom(ms);bits.push(age?age:fmtDate(ms));}
     frag.innerHTML=`<div class="rowline"><span class="tag">${esc(String(tag))}</span>${nm}${badge}</div><div class="meta">${bits.map(x=>`<span>${x}</span>`).join("")}</div>`;
   }else if(STATE.tab==="tasks"){
-    const titleK=keyLike(item,/title|name|desc/i)||"id",dueK=keyLike(item,/due|date/i),statusK=keyLike(item,/status|state/i);
-    const dueMs=dueK?epochMs(item[dueK]):null;
-    const overdue=dueMs!==null&&dueMs<now&&!/done|closed|complete/i.test(disp(item[statusK]||""));
-    if(overdue&&btn)btn.classList.add("overdue");
+    const i=taskInfo(item);
+    if(i.overdue&&btn)btn.classList.add("overdue");
     const meta=[];
-    if(dueMs!==null)meta.push(`<span class="${overdue?"alert":""}">${overdue?"Overdue · ":""}${fmtDate(dueMs)}</span>`);
-    if(statusK&&item[statusK])meta.push(`<span>${esc(disp(item[statusK]))}</span>`);
-    frag.innerHTML=`<div><span class="nm">${esc(disp(item[titleK]))}</span></div><div class="meta">${meta.join("")}</div>`;
+    if(i.dueMs!==null)meta.push(`<span class="${i.overdue?"alert":""}">${i.overdue?"Overdue · ":""}${fmtDate(i.dueMs)}</span>`);
+    if(i.statusText)meta.push(`<span>${esc(i.statusText)}</span>`);
+    frag.innerHTML=`<div><span class="nm">${esc(i.title)}</span></div><div class="meta">${meta.join("")}</div>`;
   }else{
     const nameK=keyLike(item,/name|title/i)||"id";
     const rest=Object.keys(item).filter(k=>k!==nameK&&k!=="id"&&typeof item[k]!=="object").slice(0,2);
