@@ -72,7 +72,13 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   quantity is never mistaken for an id).
 - `humanize(k)` — turns a field key into a label: whole-key overrides (`LABELS`), then
   per-word acronym casing (`ACR`: AI, TB, EID, DNA, ICBF, …) and abbreviation spell-out
-  (`ABBR`: est→Estimated, qty→Quantity, …). Add jargon here rather than in call sites.
+  (`ABBR`: est→Estimated, qty→Quantity, …). It also strips a trailing "type id" / "id" /
+  "type" (the value is resolved to a name, so the suffix is noise: `unitTypeId`→"Unit",
+  `breedId`→"Breed"). Add jargon here rather than in call sites.
+- `combineUnits(item)` — pairs a numeric quantity field with its unit field so a record
+  reads the way a farmer says it (`purchasedAmount:1000` + `unitTypeId:"kg"` → one row,
+  "1000 kg"); the standalone unit row is folded away. Used by `renderDetail` for all
+  record types. Each unit pairs with the nearest quantity field by key position.
 - **Views:** `render()` dispatches Home vs List. `renderHome()` + `computeHome()`
   build the dashboard (composition + age charts, attention strip for overdue tasks,
   stat strip, records list). `renderList()` + `rowContent()` + `renderDetail()` are
@@ -81,7 +87,11 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   reading of a task (title / due date / status / overdue), shared by the dashboard's
   attention strip and the task list — keys are resolved **per task** (task records
   vary by type, so never sample only `tasks[0]`), a `due`-named key beats generic
-  date keys, and created/completed/updated dates are never the deadline. Animal rows carry a
+  date keys, and created/completed/updated dates are never the deadline. The **task list**
+  has status filter chips (Open / Overdue / Done / All via `STATE.taskFilter`, default
+  Open so done tasks are hidden) and sorts overdue → soonest-due → undated → done
+  (`taskPasses` / `taskCmp`); the dashboard's overdue strip opens Tasks pre-filtered to
+  Overdue (`data-task` on the strip). Animal rows carry a
   status badge (green `.good` for on-farm-ish statuses, neutral otherwise); overdue
   task rows get a rust left accent (`.row.overdue`). The animal detail view is
   sectioned into Identity / Breeding / Health / Movement / Other by `sectionOf(k)`
