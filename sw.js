@@ -1,6 +1,6 @@
 /* Herd PWA service worker — caches the app shell for offline launch.
    API calls (Herdwatch + Anthropic) always go to the network, never cached. */
-const CACHE = "herd-v6";
+const CACHE = "herd-v7";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
                "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 

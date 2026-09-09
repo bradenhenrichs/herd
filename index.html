@@ -186,6 +186,51 @@
     body.mobiledetail .detail{display:flex;flex-direction:column}
     body.mobiledetail .lhead,body.mobiledetail .chips,body.mobiledetail .count{display:none}
   }
+  /* list toolbar: search + column control + download */
+  .ltools{display:flex;align-items:center;gap:8px}
+  .ltools .search{flex:1}
+  .tbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--accent);white-space:nowrap}
+  .tbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .colspanel{margin-top:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:8px;max-height:240px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
+  @media(min-width:560px){.colspanel{grid-template-columns:repeat(3,1fr)}}
+  .colspanel label{display:flex;align-items:center;gap:7px;font-size:13px;padding:5px 6px;border-radius:7px;cursor:pointer}
+  .colspanel label:hover{background:var(--paper)}
+  .colspanel input{width:15px;height:15px;accent-color:var(--accent)}
+  /* animals table (desktop only; phone keeps cards) */
+  .htable{width:100%;border-collapse:collapse;font-size:13.5px}
+  .htable th,.htable td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .htable th{position:sticky;top:0;background:var(--card);color:var(--muted);font-weight:600;cursor:pointer;user-select:none;z-index:1}
+  .htable th .ar{color:var(--accent);font-size:11px}
+  .htable td.mono{font-family:var(--mono);font-size:13px}
+  .htable tbody tr{cursor:pointer}
+  .htable tbody tr:hover{background:var(--paper)}
+  .htable tbody tr.on{background:var(--accent-weak)}
+  .htable .stbadge{font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .htable .stbadge.good{background:var(--accent-weak);border-color:transparent;color:var(--accent)}
+  @media(min-width:760px){
+    #viewList.astable .rows{width:auto;flex:1;overflow:auto}
+    #viewList.astable .detail{display:none}
+    #viewList.astable.hassel .detail{display:flex;flex-direction:column;flex:none;width:400px;border-left:1px solid var(--line)}
+  }
+  /* detail tabs + progeny/history */
+  .dtabs{display:flex;gap:2px;padding:0 12px;background:var(--card);border-bottom:1px solid var(--line);flex:none}
+  .dtab{border:none;background:none;padding:11px 12px 10px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
+  .dtab.on{color:var(--ink);border-bottom-color:var(--accent)}
+  .dtab .n{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:5px}
+  .plist{display:flex;flex-direction:column}
+  .pitem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:none;background:none;font:inherit;color:inherit;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+  .pitem:hover{background:var(--card)}
+  .pitem .tag{font-family:var(--mono);font-weight:600}
+  .pitem .sub{color:var(--muted);font-size:13px}
+  .tline{padding:6px 16px 24px}
+  .tevent{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .tevent:last-child{border-bottom:none}
+  .tevent .dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-top:5px}
+  .tevent.weight .dot{background:var(--muted)}
+  .tevent .body{flex:1;min-width:0}
+  .tevent .tt{font-weight:600;font-size:14px}
+  .tevent .td{color:var(--muted);font-size:13px;margin-top:1px;display:flex;gap:10px;flex-wrap:wrap}
+  .tevent .amt{color:var(--ink);font-family:var(--mono);font-size:12.5px}
   /* home dashboard */
   .home{flex:1;min-height:0;overflow:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:15px}
   @media(min-width:860px){.home{max-width:920px;width:100%}}
@@ -219,7 +264,14 @@
     <header class="topbar"><div class="tbtitle" id="tbTitle">Home</div><div class="sp"><button id="refreshM" class="iconbtn2 hidden" title="Refresh">↻</button></div></header>
     <section id="viewHome" class="view"></section>
     <section id="viewList" class="view">
-      <div class="lhead"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg><input id="q" type="search" placeholder="Search…" autocomplete="off"></div></div>
+      <div class="lhead">
+        <div class="ltools">
+          <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg><input id="q" type="search" placeholder="Search…" autocomplete="off"></div>
+          <button id="colsBtn" class="tbtn hidden"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg><span>Columns</span></button>
+          <button id="dlBtn" class="tbtn hidden"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/></svg><span>Download</span></button>
+        </div>
+        <div id="colsPanel" class="colspanel hidden"></div>
+      </div>
       <div class="chips" id="chips"></div>
       <div class="count" id="count"></div>
       <div class="listbody"><div class="rows" id="rows"></div><section class="detail" id="detailPane"><button class="back" id="back">‹ Back</button><div id="detail"></div></section></div>
@@ -231,7 +283,7 @@
 <script>
 "use strict";
 let DATA={}, LOOKUP=new Map(), REF=new Map();
-let STATE={tab:null,q:"",filters:{},selected:null,taskFilter:"open"};
+let STATE={tab:null,q:"",filters:{},selected:null,taskFilter:"open",cols:null,sortCol:null,sortDir:1,detailTab:"details"};
 let CFG={host:"mcie-prod.hwbe.io",version:"9.9.28",country:"IE",deviceId:null,token:null,creds:null,live:false,profile:null,farm:null};
 
 const $=s=>document.querySelector(s);
@@ -491,9 +543,119 @@ function taskCmp(a,b){const A=taskInfo(a),B=taskInfo(b);
     || (A.overdue?0:1)-(B.overdue?0:1)                              // overdue before the rest
     || (A.dueMs==null?Infinity:A.dueMs)-(B.dueMs==null?Infinity:B.dueMs); // soonest due first, undated last
 }
+/* ---------- animals table: columns, cells, CSV ---------- */
+const COLS_KEY="herd:cols";
+function colOptions(){
+  // every scalar animal field that is populated somewhere, plus a derived age column
+  const A=DATA.animals||[]; const seen=new Set(); const out=[];
+  const push=(key,label)=>{if(key&&!seen.has(key)){seen.add(key);out.push({key,label:label||humanize(key)});}};
+  if(F.dob) push("__age","Age (mths)");
+  [F.tag,F.name,F.breed,F.sex,F.dob,F.status,F.mob].forEach(k=>k&&push(k));
+  const keys=new Set(); A.forEach(a=>Object.keys(a).forEach(k=>keys.add(k)));
+  [...keys].forEach(k=>{
+    if(k==="id"&&F.tag&&F.tag!=="id")return;
+    const populated=A.some(a=>{const v=a[k];return v!=null&&v!==""&&!(typeof v==="object"&&epochMs(v)===null);});
+    if(populated) push(k);
+  });
+  return out;
+}
+function defaultCols(){
+  const want=[F.tag,F.name,F.breed,F.sex,F.dob,"__age",F.status,F.mob].filter(Boolean);
+  const avail=new Set(colOptions().map(c=>c.key));
+  return want.filter(k=>avail.has(k)).slice(0,7);
+}
+function ensureCols(){
+  if(STATE.cols)return;
+  let saved=null; try{saved=JSON.parse(localStorage.getItem(COLS_KEY)||"null");}catch(e){}
+  const avail=new Set(colOptions().map(c=>c.key));
+  STATE.cols=(Array.isArray(saved)&&saved.filter(k=>avail.has(k)).length)?saved.filter(k=>avail.has(k)):defaultCols();
+}
+function saveCols(){try{localStorage.setItem(COLS_KEY,JSON.stringify(STATE.cols));}catch(e){}}
+function colLabel(key){const o=colOptions().find(c=>c.key===key);return o?o.label:humanize(key);}
+function ageMonths(a){const ms=F.dob?epochMs(a[F.dob]):null;return ms==null?null:Math.round((now-ms)/(30.44*86400000));}
+function cellRaw(a,key){
+  if(key==="__age"){const m=ageMonths(a);return m==null?"":m;}
+  if(key===F.tag)return String(tagOf(a));
+  return a[key];
+}
+function cellText(a,key){
+  if(key==="__age"){const m=ageMonths(a);return m==null?"—":String(m);}
+  if(key===F.tag)return String(tagOf(a));
+  return disp(a[key],key);
+}
+function isWide(){return window.matchMedia("(min-width:760px)").matches;}
+function sortAnimals(items){
+  if(!STATE.sortCol)return items;
+  const k=STATE.sortCol,dir=STATE.sortDir;
+  return items.slice().sort((a,b)=>{
+    let x=cellRaw(a,k),y=cellRaw(b,k);
+    const mx=epochMs(x),my=epochMs(y); if(mx!=null)x=mx; if(my!=null)y=my;
+    const nx=typeof x==="number", ny=typeof y==="number";
+    if(nx&&ny)return (x-y)*dir;
+    x=cellText(a,k).toLowerCase(); y=cellText(b,k).toLowerCase();
+    return x<y?-dir:x>y?dir:0;
+  });
+}
+function renderAnimalsTable(items){
+  const cols=STATE.cols;
+  const head=cols.map(k=>{const ar=STATE.sortCol===k?`<span class="ar">${STATE.sortDir>0?"▲":"▼"}</span>`:"";return `<th data-col="${esc(k)}">${esc(colLabel(k))}${ar}</th>`;}).join("");
+  const body=items.map(a=>{
+    const tds=cols.map(k=>{
+      if(k===F.status){const t=disp(a[k]);if(!t||t==="—")return "<td></td>";const good=/on.?farm|active|alive|present|current/i.test(t);return `<td><span class="stbadge${good?" good":""}">${esc(t)}</span></td>`;}
+      const mono=(k===F.tag||/tag|ear|number|^id$/i.test(k))&&k!=="__age";
+      return `<td class="${mono?"mono":""}">${esc(cellText(a,k))}</td>`;
+    }).join("");
+    const on=STATE.selected===a?" class=\"on\"":"";
+    return `<tr${on} data-i="${items.indexOf(a)}">${tds}</tr>`;
+  }).join("");
+  const rows=$("#rows");
+  rows.innerHTML=`<table class="htable"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  rows.querySelectorAll("thead th").forEach(th=>th.addEventListener("click",()=>{
+    const k=th.dataset.col; if(STATE.sortCol===k)STATE.sortDir=-STATE.sortDir; else {STATE.sortCol=k;STATE.sortDir=1;} render();
+  }));
+  rows.querySelectorAll("tbody tr").forEach(tr=>tr.addEventListener("click",()=>{
+    STATE.selected=items[+tr.dataset.i];STATE.detailTab="details";document.body.classList.add("mobiledetail");render();
+  }));
+}
+function toCSV(items){
+  const cols=STATE.cols;
+  const esc=s=>{s=String(s==null?"":s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const head=cols.map(k=>esc(colLabel(k))).join(",");
+  const lines=items.map(a=>cols.map(k=>esc(cellText(a,k))).join(","));
+  return [head,...lines].join("\n");
+}
+function downloadCSV(items){
+  const blob=new Blob([toCSV(items)],{type:"text/csv"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=`herd-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function renderColsPanel(){
+  const panel=$("#colsPanel");
+  panel.innerHTML=colOptions().map(c=>{
+    const on=STATE.cols.includes(c.key);
+    return `<label><input type="checkbox" data-col="${esc(c.key)}" ${on?"checked":""}>${esc(c.label)}</label>`;
+  }).join("");
+  panel.querySelectorAll("input").forEach(inp=>inp.addEventListener("change",()=>{
+    const k=inp.dataset.col;
+    if(inp.checked){if(!STATE.cols.includes(k))STATE.cols=colOptions().map(c=>c.key).filter(c=>STATE.cols.includes(c)||c===k);}
+    else if(STATE.cols.length>1)STATE.cols=STATE.cols.filter(c=>c!==k);
+    else{inp.checked=true;return;}   // keep at least one column
+    saveCols();render();
+  }));
+}
 function renderList(){
   const chipWrap=$("#chips");chipWrap.innerHTML="";
   const isTasks=STATE.tab==="tasks";
+  const isAnimals=STATE.tab==="animals";
+  const table=isAnimals&&isWide();
+  $("#viewList").classList.toggle("astable",table);
+  $("#viewList").classList.toggle("hassel",table&&!!STATE.selected);
+  // toolbar (animals only)
+  $("#colsBtn").classList.toggle("hidden",!isAnimals);
+  $("#dlBtn").classList.toggle("hidden",!isAnimals);
+  if(!isAnimals){$("#colsPanel").classList.add("hidden");}
+  if(isAnimals)ensureCols();
   if(isTasks){
     chipWrap.style.display="flex";
     TASK_FILTERS.forEach(([val,label])=>{const c=document.createElement("button");c.className="chip"+(STATE.taskFilter===val?" on":"");c.textContent=label;
@@ -508,10 +670,16 @@ function renderList(){
   const list=DATA[STATE.tab]||[];
   let items=list.filter(matchRow);
   if(isTasks){items=items.filter(t=>taskPasses(t,STATE.taskFilter)).sort(taskCmp);}
+  if(isAnimals)items=sortAnimals(items);
   $("#count").textContent=`${items.length} of ${list.length}`;
-  const rows=$("#rows");rows.innerHTML="";
-  items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item,b));
-    b.onclick=()=>{STATE.selected=item;document.body.classList.add("mobiledetail");render();};rows.appendChild(b);});
+  const dl=$("#dlBtn"); if(dl)dl.onclick=()=>downloadCSV(items);
+  if(table){
+    renderAnimalsTable(items);
+  }else{
+    const rows=$("#rows");rows.innerHTML="";
+    items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item,b));
+      b.onclick=()=>{STATE.selected=item;STATE.detailTab="details";document.body.classList.add("mobiledetail");render();};rows.appendChild(b);});
+  }
   renderDetail();
 }
 
@@ -589,10 +757,17 @@ function rowContent(item,btn){
     const stTxt=F.status&&item[F.status]?disp(item[F.status]):"";
     const good=/on.?farm|active|alive|present|current/i.test(stTxt);
     const badge=stTxt?`<span class="stbadge${good?" good":""}">${esc(stTxt)}</span>`:"";
-    const bits=[];
-    if(F.sex&&item[F.sex])bits.push(esc(disp(item[F.sex])));
-    if(F.breed&&item[F.breed])bits.push(esc(disp(item[F.breed])));
-    if(F.dob&&epochMs(item[F.dob])!==null){const ms=epochMs(item[F.dob]);const age=ageFrom(ms);bits.push(age?age:fmtDate(ms));}
+    // meta bits follow the chosen columns (minus the ones already in the headline)
+    const skip=new Set([F.tag,F.name,F.status]);
+    let bits=[];
+    if(STATE.cols){
+      bits=STATE.cols.filter(k=>!skip.has(k)).map(k=>{const t=cellText(item,k);return (t&&t!=="—")?esc(t):null;}).filter(Boolean).slice(0,4);
+    }
+    if(!bits.length){
+      if(F.sex&&item[F.sex])bits.push(esc(disp(item[F.sex])));
+      if(F.breed&&item[F.breed])bits.push(esc(disp(item[F.breed])));
+      if(F.dob&&epochMs(item[F.dob])!==null){const ms=epochMs(item[F.dob]);const age=ageFrom(ms);bits.push(age?age:fmtDate(ms));}
+    }
     frag.innerHTML=`<div class="rowline"><span class="tag">${esc(String(tag))}</span>${nm}${badge}</div><div class="meta">${bits.map(x=>`<span>${x}</span>`).join("")}</div>`;
   }else if(STATE.tab==="tasks"){
     const i=taskInfo(item);
@@ -661,8 +836,80 @@ function renderDetail(){
     body=`<dl>${rows}</dl>`;
   }
   const toggle=`<label class="showall"><input type="checkbox" id="showAll" ${STATE.showAll?"checked":""}> Show empty fields</label>`;
-  host.innerHTML=head+toggle+`<div class="dbody ${STATE.showAll?"":"hide-empty"}">${body}</div><div style="height:24px"></div>`;
+  const details=toggle+`<div class="dbody ${STATE.showAll?"":"hide-empty"}">${body}</div>`;
+  if(STATE.tab==="animals"){
+    const prog=progenyOf(item), hist=historyOf(item);
+    const tab=(id,label,n)=>`<button class="dtab ${STATE.detailTab===id?"on":""}" data-dt="${id}">${label}${n!=null?`<span class="n">${n}</span>`:""}</button>`;
+    const tabs=`<div class="dtabs">${tab("details","Details")}${tab("progeny","Progeny",prog.length)}${tab("history","History",hist.length)}</div>`;
+    const content=STATE.detailTab==="progeny"?renderProgeny(prog):STATE.detailTab==="history"?renderHistory(hist):details;
+    host.innerHTML=head+tabs+content+`<div style="height:24px"></div>`;
+    host.querySelectorAll(".dtab").forEach(b=>b.addEventListener("click",()=>{STATE.detailTab=b.dataset.dt;renderDetail();}));
+    if(STATE.detailTab==="progeny")host.querySelectorAll(".pitem").forEach((el,i)=>el.addEventListener("click",()=>{STATE.selected=prog[i];STATE.detailTab="details";render();}));
+    const cb=$("#showAll");if(cb)cb.addEventListener("change",e=>{STATE.showAll=e.target.checked;renderDetail();});
+    return;
+  }
+  host.innerHTML=head+details+`<div style="height:24px"></div>`;
   const cb=$("#showAll");if(cb)cb.addEventListener("change",e=>{STATE.showAll=e.target.checked;renderDetail();});
+}
+/* progeny + history are derived by matching other records back to this animal's identifiers */
+function idsOf(a){
+  const s=new Set(); const add=v=>{if(v!=null&&v!=="")s.add(String(v));};
+  add(a.id); if(F.tag)add(a[F.tag]); add(tagOf(a));
+  Object.keys(a).forEach(k=>{if(/mgmt|management|shorttag|short_tag|^number$/i.test(k))add(a[k]);});
+  return s;
+}
+function progenyOf(a){
+  const A=DATA.animals||[]; const ids=idsOf(a);
+  return A.filter(b=>b!==a&&Object.keys(b).some(k=>/dam|sire|mother|father|parent/i.test(k)&&b[k]!=null&&ids.has(String(b[k]))))
+    .sort((x,y)=>{const mx=F.dob?epochMs(x[F.dob]):null,my=F.dob?epochMs(y[F.dob]):null;return (my||0)-(mx||0);});
+}
+function measureText(r){
+  const {merged}=combineUnits(r); const vals=Object.values(merged);
+  if(vals.length)return vals.join(", ");
+  for(const k of Object.keys(r)){
+    const v=r[k]; if(typeof v!=="number"||!isFinite(v))continue;
+    if(/weight|amount|qty|quantity|volume|dose|rate/i.test(k)){
+      let u=""; if(/kg/i.test(k))u="kg"; else if(/ml/i.test(k))u="ml"; else if(/litre|liter|(^|[^a-z])l$/i.test(k))u="L"; else if(/(^|[^a-z])g$/i.test(k))u="g";
+      return `${v}${u?" "+u:""}`;
+    }
+  }
+  return "";
+}
+function historyEntry(entity,r){
+  const keys=Object.keys(r);
+  const dateK=keys.find(k=>epochMs(r[k])!=null&&/date|when|treated|weigh|recorded|given|admin/i.test(k))||keys.find(k=>epochMs(r[k])!=null);
+  const ms=dateK?epochMs(r[dateK]):null;
+  const nameK=keyLike(r,/product|remedy|medic|name|title|reason|type/i);
+  let label=nameK?disp(r[nameK],nameK):"";
+  if(!label||label==="—")label=humanize(entity).replace(/s$/,"");
+  return {ms,label,amt:measureText(r),weight:/weigh/i.test(entity)||keys.some(k=>/weight/i.test(k)),entity};
+}
+function historyOf(a){
+  const ids=idsOf(a); const out=[];
+  for(const [entity,rows] of Object.entries(DATA)){
+    if(!Array.isArray(rows)||["animals","system_type","tasks"].includes(entity))continue;
+    for(const r of rows){
+      if(!r||typeof r!=="object")continue;
+      const refs=Object.keys(r).some(k=>{const v=r[k];return (typeof v==="string"||typeof v==="number")&&/animal|tag|dam|calf|beast|ear|mgmt/i.test(k)&&ids.has(String(v));});
+      if(refs)out.push(historyEntry(entity,r));
+    }
+  }
+  return out.sort((x,y)=>(y.ms||0)-(x.ms||0));
+}
+function renderProgeny(list){
+  if(!list.length)return `<div class="empty" style="padding:40px 16px"><p>No progeny recorded for this animal.</p></div>`;
+  return `<div class="plist">`+list.map(b=>{
+    const sub=[]; if(F.sex&&b[F.sex])sub.push(esc(disp(b[F.sex]))); if(F.breed&&b[F.breed])sub.push(esc(disp(b[F.breed])));
+    if(F.dob&&epochMs(b[F.dob])!=null){const ag=ageFrom(epochMs(b[F.dob]));if(ag)sub.push(ag);}
+    return `<button class="pitem"><span class="tag">${esc(String(tagOf(b)))}</span><span class="sub">${sub.join(" · ")}</span></button>`;
+  }).join("")+`</div>`;
+}
+function renderHistory(list){
+  if(!list.length)return `<div class="empty" style="padding:40px 16px"><p>No history records for this animal.</p></div>`;
+  return `<div class="tline">`+list.map(e=>{
+    const date=e.ms?fmtDate(e.ms):"";
+    return `<div class="tevent${e.weight?" weight":""}"><div class="dot"></div><div class="body"><div class="tt">${esc(e.label)}</div><div class="td">${date?`<span>${date}</span>`:""}${e.amt?`<span class="amt">${esc(e.amt)}</span>`:""}</div></div></div>`;
+  }).join("")+`</div>`;
 }
 /* section an animal's fields by name pattern; detected headline fields are pinned to their group */
 function sectionOf(k){
@@ -680,6 +927,9 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 /* ---------- events ---------- */
 $("#q").addEventListener("input",e=>{STATE.q=e.target.value.trim();STATE.selected=null;document.body.classList.remove("mobiledetail");render();});
 $("#back").addEventListener("click",()=>{STATE.selected=null;document.body.classList.remove("mobiledetail");render();});
+$("#colsBtn").addEventListener("click",()=>{const p=$("#colsPanel");const open=p.classList.contains("hidden");if(open){ensureCols();renderColsPanel();}p.classList.toggle("hidden");});
+// re-render the list when crossing the table/cards breakpoint
+(function(){let wide=isWide();window.addEventListener("resize",()=>{const w=isWide();if(w!==wide){wide=w;if(STATE.view==="list")render();}});})();
 
 $("#mConnect").addEventListener("click",()=>{$("#mConnect").classList.add("on");$("#mFile").classList.remove("on");$("#connectPanel").classList.remove("hidden");$("#filePanel").classList.add("hidden");});
 $("#mFile").addEventListener("click",()=>{$("#mFile").classList.add("on");$("#mConnect").classList.remove("on");$("#filePanel").classList.remove("hidden");$("#connectPanel").classList.add("hidden");});

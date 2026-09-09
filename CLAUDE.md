@@ -82,7 +82,18 @@ It is a personal-use client for the owner's own Herdwatch account and data.
 - **Views:** `render()` dispatches Home vs List. `renderHome()` + `computeHome()`
   build the dashboard (composition + age charts, attention strip for overdue tasks,
   stat strip, records list). `renderList()` + `rowContent()` + `renderDetail()` are
-  the herd/records browser (search, filter chips, master-detail). `facets()` builds
+  the herd/records browser (search, filter chips, master-detail). **Herd list:** on a
+  wide screen (`isWide()`, ≥760px) the animals tab renders a sortable multi-column
+  **table** (`renderAnimalsTable`) with a **column picker** (`colOptions` / `STATE.cols`,
+  persisted to `localStorage` `herd:cols`, `renderColsPanel`) and a **CSV download**
+  (`toCSV` / `downloadCSV`); on a phone it stays card rows whose meta follows the same
+  chosen columns. `#viewList.astable` / `.hassel` classes flip the layout so the table
+  goes full-width until an animal is selected, then the detail opens in a 400px pane.
+  **Animal detail** has Details / Progeny / History tabs (`STATE.detailTab`): `progenyOf`
+  finds animals whose dam/sire reference resolves back to this animal (`idsOf` collects
+  its id/tag/mgmt identifiers); `historyOf` gathers records from other entities that
+  reference the animal into a date-sorted timeline (`historyEntry` picks date/label,
+  `measureText` formats the amount via `combineUnits` or a unit-suffixed number). `facets()` builds
   the filter chips. `switchTo(target)` handles navigation. `taskInfo(t)` is the one
   reading of a task (title / due date / status / overdue), shared by the dashboard's
   attention strip and the task list — keys are resolved **per task** (task records
