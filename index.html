@@ -138,30 +138,87 @@
   </div>
 </div>
 
-<div id="app" class="hidden" style="display:flex;flex-direction:column;height:100%">
-  <header>
-    <div class="brand">
-      <h1 id="farmName">Herd</h1><span class="herdno" id="herdNo"></span>
-      <button id="askBtn" class="askbtn">Ask</button>
-      <button id="refresh" class="refresh hidden" style="margin-left:6px">Refresh</button>
-    </div>
-    <div class="search">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-      <input id="q" type="search" placeholder="Search tag, name, breed…" autocomplete="off">
-    </div>
-  </header>
-  <nav id="tabs"></nav>
-  <main>
-    <section class="pane list">
+<style>
+  /* app shell: sidebar (desktop) + bottom tab bar (mobile) */
+  #app{display:flex;flex-direction:column;flex:1;min-height:0}
+  #side{display:none}
+  #stage{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
+  .view{display:none;flex:1;min-height:0;flex-direction:column}
+  .view.on{display:flex}
+  .topbar{display:flex;align-items:center;gap:10px;padding:max(env(safe-area-inset-top),11px) 15px 11px;background:var(--card);border-bottom:1px solid var(--line);flex:none}
+  .topbar .tbtitle{font-size:18px;font-weight:650;letter-spacing:-.01em}
+  .topbar .sp{margin-left:auto;display:flex;gap:8px}
+  .iconbtn2{border:1px solid var(--line);background:var(--paper);border-radius:9px;width:36px;height:36px;font-size:17px;color:var(--accent);cursor:pointer}
+  #bottomnav{display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px max(env(safe-area-inset-bottom),6px);flex:none;z-index:20}
+  .navitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--muted);font-size:11px;font-weight:600;padding:5px 2px;cursor:pointer}
+  .navitem.on{color:var(--accent)}
+  .navitem svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  @media(min-width:860px){
+    #app{flex-direction:row}
+    #side{display:flex;flex-direction:column;width:238px;flex:none;border-right:1px solid var(--line);background:var(--card);padding:18px 12px;gap:14px}
+    #bottomnav{display:none}
+    .topbar{display:none}
+    .sideid .idname{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+    .sideid .idno{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
+    #sidenav{display:flex;flex-direction:column;gap:2px}
+    #sidenav .navitem{flex-direction:row;justify-content:flex-start;gap:11px;font-size:15px;padding:10px 12px;border-radius:10px}
+    #sidenav .navitem.on{background:var(--accent-weak)}
+    #sidenav .navitem svg{width:20px;height:20px}
+    .sidefoot{margin-top:auto}
+    .ghostbtn{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px;font-weight:600;color:var(--accent);cursor:pointer}
+  }
+  /* list view */
+  .lhead{padding:12px 14px 4px;flex:none}
+  .listbody{flex:1;min-height:0;display:flex}
+  .detail{overflow:auto}
+  @media(min-width:760px){ .rows{width:360px;flex:none;border-right:1px solid var(--line)} .detail{flex:1;min-width:0} }
+  @media(max-width:759px){
+    .rows{flex:1;width:100%}
+    .detail{display:none;flex:1;min-width:0}
+    body.mobiledetail .rows{display:none}
+    body.mobiledetail .detail{display:flex;flex-direction:column}
+    body.mobiledetail .lhead,body.mobiledetail .chips,body.mobiledetail .count{display:none}
+  }
+  /* home dashboard */
+  .home{flex:1;min-height:0;overflow:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:15px}
+  @media(min-width:860px){.home{max-width:920px;width:100%}}
+  .hero .big{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .hero .sub{color:var(--muted);font-size:14.5px;margin-top:3px}
+  .attn{display:block;width:100%;text-align:left;padding:13px 15px;border-radius:12px;background:#F3E4DF;border:1px solid #E4C9C0;color:var(--alert);font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+  .attn.ok{background:var(--accent-weak);border-color:#CDE3C9;color:var(--accent);cursor:default}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  @media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stat{background:var(--card);padding:14px 15px}
+  .stat .v{font-size:22px;font-weight:750;letter-spacing:-.01em}
+  .stat .k{color:var(--muted);font-size:12px;margin-top:2px}
+  .two{display:grid;grid-template-columns:1fr;gap:15px}
+  @media(min-width:640px){.two{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .card h3{margin:0 0 11px;font-size:13.5px;font-weight:650}
+  .reclist{display:flex;flex-direction:column}
+  .recitem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 2px;border:none;border-bottom:1px solid var(--line);background:none;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+  .recitem:last-child{border-bottom:none}
+  .recitem .c{font-family:var(--mono);font-size:13px;color:var(--muted)}
+</style>
+
+<div id="app" class="hidden">
+  <button id="askBtn" class="hidden" aria-hidden="true"></button>
+  <aside id="side">
+    <div class="sideid"><div class="idname" id="farmName">Herd</div><div class="idno" id="herdNo"></div></div>
+    <div id="sidenav"></div>
+    <div class="sidefoot"><button id="refresh" class="ghostbtn hidden">↻ Refresh</button></div>
+  </aside>
+  <main id="stage">
+    <header class="topbar"><div class="tbtitle" id="tbTitle">Home</div><div class="sp"><button id="refreshM" class="iconbtn2 hidden" title="Refresh">↻</button></div></header>
+    <section id="viewHome" class="view"></section>
+    <section id="viewList" class="view">
+      <div class="lhead"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg><input id="q" type="search" placeholder="Search…" autocomplete="off"></div></div>
       <div class="chips" id="chips"></div>
       <div class="count" id="count"></div>
-      <div class="rows" id="rows"></div>
-    </section>
-    <section class="pane detail">
-      <button class="back" id="back">‹ All</button>
-      <div id="detail"></div>
+      <div class="listbody"><div class="rows" id="rows"></div><section class="detail" id="detailPane"><button class="back" id="back">‹ Back</button><div id="detail"></div></section></div>
     </section>
   </main>
+  <nav id="bottomnav"></nav>
 </div>
 
 <script>
@@ -274,18 +331,33 @@ function bootUI(){
   $("#farmName").textContent=(farm&&farm.farmName)?farm.farmName:((farm&&(farm.firstname||farm.lastname))?`${farm.firstname||""} ${farm.lastname||""}`.trim():"Herd");
   $("#herdNo").textContent=farm&&farm.herdNumber?farm.herdNumber:"";
   $("#refresh").classList.toggle("hidden",!CFG.live);
-
-  const present=TAB_ORDER.filter(t=>DATA[t]&&DATA[t].length);
-  const extra=Object.keys(DATA).filter(k=>!TAB_ORDER.includes(k)&&k!=="system_type"&&DATA[k].length);
-  const tabs=present.concat(extra);
-  const nav=$("#tabs");nav.innerHTML="";
-  tabs.forEach(t=>{
-    const b=document.createElement("button");
-    b.innerHTML=(TAB_LABEL[t]||humanize(t))+` <span class="n">${DATA[t].length}</span>`;
-    b.onclick=()=>{STATE.tab=t;STATE.q="";STATE.filters={};STATE.selected=null;$("#q").value="";render();};
-    b.dataset.tab=t;nav.appendChild(b);
+  const rm=$("#refreshM"); if(rm){ rm.classList.toggle("hidden",!CFG.live); rm.onclick=()=>$("#refresh").click(); }
+  buildNav();
+  if(!STATE.view) STATE.view="home";
+  if(!STATE.tab) STATE.tab=(DATA.animals&&DATA.animals.length)?"animals":Object.keys(DATA).find(k=>k!=="system_type"&&DATA[k].length);
+  render();
+}
+const NAV_ICONS={
+  home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
+  animals:'<svg viewBox="0 0 24 24"><path d="M5 8c0 5 3 9 7 9s7-4 7-9"/><path d="M4.6 8c-1-2-3-1.6-2.6.5M19.4 8c1-2 3-1.6 2.6.5"/><circle cx="9.7" cy="11" r="1.1"/><circle cx="14.3" cy="11" r="1.1"/></svg>',
+  tasks:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.3 5.4l1 1 1.8-2M4.3 11.4l1 1 1.8-2M4.3 17.4l1 1 1.8-2"/></svg>',
+  __ask:'<svg viewBox="0 0 24 24"><path d="M4 5h16v10H8l-4 4z"/></svg>'
+};
+function buildNav(){
+  const items=[{id:"home",label:"Home"}];
+  if(DATA.animals&&DATA.animals.length) items.push({id:"animals",label:"Herd"});
+  if(DATA.tasks&&DATA.tasks.length) items.push({id:"tasks",label:"Tasks"});
+  items.push({id:"__ask",label:"Ask"});
+  ["#sidenav","#bottomnav"].forEach(sel=>{
+    const c=$(sel); if(!c)return; c.innerHTML="";
+    items.forEach(it=>{
+      const b=document.createElement("button");
+      b.className="navitem"; b.dataset.nav=it.id;
+      b.innerHTML=(NAV_ICONS[it.id]||"")+`<span>${it.label}</span>`;
+      b.addEventListener("click",()=>switchTo(it.id));
+      c.appendChild(b);
+    });
   });
-  STATE.tab=tabs[0];render();
 }
 
 function facets(){
@@ -305,20 +377,92 @@ function matchRow(item){
   return true;
 }
 function render(){
-  [...$("#tabs").children].forEach(b=>b.classList.toggle("on",b.dataset.tab===STATE.tab));
+  const active=STATE.view==="home"?"home":STATE.tab;
+  document.querySelectorAll(".navitem").forEach(b=>b.classList.toggle("on",b.dataset.nav===active));
+  $("#tbTitle").textContent=STATE.view==="home"?"Home":(STATE.tab==="animals"?"Herd":(TAB_LABEL[STATE.tab]||humanize(STATE.tab)));
+  $("#viewHome").classList.toggle("on",STATE.view==="home");
+  $("#viewList").classList.toggle("on",STATE.view!=="home");
+  if(STATE.view==="home") renderHome(); else renderList();
+}
+function switchTo(target){
+  if(target==="__ask"){ if(typeof openChat==="function") openChat(); return; }
+  STATE.view=target==="home"?"home":"list";
+  STATE.tab=target==="home"?STATE.tab:target;
+  STATE.q="";STATE.filters={};STATE.selected=null;
+  const q=$("#q"); if(q) q.value="";
+  document.body.classList.remove("mobiledetail");
+  render();
+}
+function renderList(){
   const chipWrap=$("#chips");chipWrap.innerHTML="";
   const fc=facets();
   if(fc.length){chipWrap.style.display="flex";
     fc.forEach(f=>{const c=document.createElement("button");c.className="chip"+(STATE.filters[f.field]===f.val?" on":"");c.textContent=f.label;
       c.onclick=()=>{if(STATE.filters[f.field]===f.val)delete STATE.filters[f.field];else STATE.filters[f.field]=f.val;render();};chipWrap.appendChild(c);});
   }else chipWrap.style.display="none";
-
-  const items=(DATA[STATE.tab]||[]).filter(matchRow);
-  $("#count").textContent=`${items.length} of ${DATA[STATE.tab].length}`;
+  const list=DATA[STATE.tab]||[];
+  const items=list.filter(matchRow);
+  $("#count").textContent=`${items.length} of ${list.length}`;
   const rows=$("#rows");rows.innerHTML="";
   items.forEach(item=>{const b=document.createElement("button");b.className="row"+(STATE.selected===item?" on":"");b.appendChild(rowContent(item));
     b.onclick=()=>{STATE.selected=item;document.body.classList.add("mobiledetail");render();};rows.appendChild(b);});
   renderDetail();
+}
+
+/* ---------- home dashboard ---------- */
+function countBy(field){
+  const A=DATA.animals||[]; const g={};
+  A.forEach(a=>{let k=disp(a[field]); if(!k||k==="—")k="Unknown"; g[k]=(g[k]||0)+1;});
+  return Object.entries(g).map(([label,value])=>({label,value})).sort((x,y)=>y.value-x.value);
+}
+function computeHome(){
+  const A=DATA.animals||[];
+  const ages=A.map(a=>{const ms=F.dob?epochMs(a[F.dob]):null;return ms==null?null:(now-ms)/(365.25*86400000);}).filter(x=>x!=null);
+  const buckets=[["<1y",0,1],["1–2y",1,2],["2–4y",2,4],["4–8y",4,8],["8y+",8,1e9]];
+  const ageSeries=buckets.map(([label,lo,hi])=>({label,value:ages.filter(a=>a>=lo&&a<hi).length}));
+  const avgAge=ages.length?+(ages.reduce((s,x)=>s+x,0)/ages.length).toFixed(1):null;
+  const oldest=ages.length?Math.floor(Math.max.apply(null,ages)):null;
+  let pctFemale=null;
+  if(F.sex){const fem=A.filter(a=>/female|^f$|cow|heifer/i.test(disp(a[F.sex]))).length; pctFemale=A.length?Math.round(fem/A.length*100):null;}
+  const T=DATA.tasks||[]; const overdue=[];
+  if(T.length){const s=T[0],dueK=keyLike(s,/due|date/i),stK=keyLike(s,/status|state/i),tiK=keyLike(s,/title|name|desc/i)||"id";
+    T.forEach(t=>{const ms=dueK?epochMs(t[dueK]):null;const done=/done|closed|complete/i.test(disp(t[stK]||""));if(ms!=null&&ms<now&&!done)overdue.push({title:disp(t[tiK]),due:ms});});
+    overdue.sort((a,b)=>a.due-b.due);
+  }
+  const milkK=keyLike(A[0]||{},/milkingstatus|milking|lactat/i);
+  const records=Object.keys(DATA).filter(k=>!["animals","tasks","system_type"].includes(k)&&DATA[k].length).map(k=>({key:k,label:humanize(k),count:DATA[k].length}));
+  return {total:A.length,species:countBy("species"),breeds:countBy(F.breed||"breed"),
+    secondary:milkK?{title:humanize(milkK),series:countBy(milkK)}:(F.sex?{title:humanize(F.sex),series:countBy(F.sex)}:null),
+    ageSeries,avgAge,oldest,pctFemale,mobs:(DATA.mobs||[]).length,paddocks:(DATA.paddocks||[]).length,tasksTotal:T.length,overdue,records};
+}
+function statCell(v,k){return `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`;}
+function renderHome(){
+  const h=computeHome();
+  const speciesLine=h.species.length?h.species.map(s=>`${s.value} ${String(s.label).toLowerCase()}`).join(" · "):"animals";
+  let attn="";
+  if(h.overdue.length) attn=`<button class="attn" data-go="tasks">${h.overdue.length} task${h.overdue.length>1?"s":""} overdue — ${esc(clip(h.overdue[0].title,40))}</button>`;
+  else if(h.tasksTotal) attn=`<div class="attn ok">Nothing overdue — ${h.tasksTotal} task${h.tasksTotal>1?"s":""} on the books</div>`;
+  const stats=[
+    statCell(h.avgAge!=null?h.avgAge+"y":"—","Avg age"),
+    statCell(h.oldest!=null?h.oldest+"y":"—","Oldest"),
+    h.pctFemale!=null?statCell(h.pctFemale+"%","Female"):statCell(h.mobs||"—","Mobs"),
+    statCell(h.paddocks||"—","Paddocks")
+  ].join("");
+  const secondary=(h.secondary&&h.secondary.series.length)?`<div class="card"><h3>${esc(h.secondary.title)}</h3>${chartSVG("pie",h.secondary.series)}</div>`:"";
+  const records=h.records.length?`<div class="card"><h3>Records</h3><div class="reclist">${h.records.map(r=>`<button class="recitem" data-go="${esc(r.key)}"><span>${esc(r.label)}</span><span class="c">${r.count}</span></button>`).join("")}</div></div>`:"";
+  $("#viewHome").innerHTML=`
+    <div class="home">
+      <div class="hero"><div class="big">${h.total}</div><div class="sub">${esc(speciesLine)}</div></div>
+      ${attn}
+      <div class="stats">${stats}</div>
+      <div class="two">
+        <div class="card"><h3>Breeds</h3>${chartSVG("pie",h.breeds)}</div>
+        ${secondary}
+      </div>
+      <div class="card"><h3>Age profile</h3>${chartSVG("bar",h.ageSeries)}</div>
+      ${records}
+    </div>`;
+  $("#viewHome").querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>switchTo(b.dataset.go)));
 }
 function rowContent(item){
   const frag=document.createElement("div");
