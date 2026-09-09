@@ -79,9 +79,26 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   reads the way a farmer says it (`purchasedAmount:1000` + `unitTypeId:"kg"` → one row,
   "1000 kg"); the standalone unit row is folded away. Used by `renderDetail` for all
   record types. Each unit pairs with the nearest quantity field by key position.
-- **Views:** `render()` dispatches Home vs List. `renderHome()` + `computeHome()`
-  build the dashboard (composition + age charts, attention strip for overdue tasks,
-  stat strip, records list). `renderList()` + `rowContent()` + `renderDetail()` are
+- **Recommendations (`computeRecs`)** — a local, deterministic rules engine that is the
+  heart of the Home screen: overdue tasks, weaning-age calves, weighing gaps, missing
+  dam, cull review, TB-test interval, scanning-due, active medicine withdrawals, calving
+  windows. Every card and the exact animals behind it are computed on-device (the
+  assistant never invents a count); each rule is **guarded** by whether the needed
+  fields/records exist, so it stays quiet on a herd that doesn't carry that data.
+  `herdSignals()` builds per-animal aggregates (last weight, withdrawal-until) by matching
+  other entities back to animals via `animalIndex`/`recordAnimal`. Recs are grouped by who
+  acts and when — **now** (in-house), **book** (needs the vet/a booking), **watch**
+  (a constraint, not a task) via `REC_GROUPS`; a red stripe still marks a real alert in any
+  group. Dismissed recs persist in `localStorage` `herd:handled`.
+- **Reminders / write seam** — `writeAdapter` (create/setDone/remove) backs on-device
+  reminders in `localStorage` `herd:reminders`; `reminderTasks()` folds them into the Tasks
+  list. **This is the seam for future Herdwatch write-back**: when write endpoints are known,
+  swap the adapter bodies to POST and keep the call sites. `toast()` is the transient confirmation.
+- **Views:** `render()` dispatches Home vs List. `renderHome()` renders the recommendation
+  feed (rules-derived brief, an ask bar, grouped rec cards with actions — View animals /
+  Create reminder / Ask / Handled) and demotes the old charts into a collapsed
+  `details.bynum` "By the numbers" section built by `computeHome()`. `renderList()` +
+  `rowContent()` + `renderDetail()` are
   the herd/records browser (search, filter chips, master-detail). **Herd list:** on a
   wide screen (`isWide()`, ≥760px) the animals tab renders a sortable multi-column
   **table** (`renderAnimalsTable`) with a **column picker** (`colOptions` / `STATE.cols`,
@@ -129,12 +146,22 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   API key (header `anthropic-dangerous-direct-browser-access: true`). The key is
   entered at runtime via the ⚙ panel, held **in memory only, never persisted**. The
   endpoint is configurable (can be pointed at a proxy).
-- **Tool-use loop** (`llmTurn`): Claude is given two tools — `query_herd` (exact
+- **Tool-use loop** (`llmTurn`): Claude is given read tools — `query_herd` (exact
   counts / filters / groupings / aggregates computed locally by `runQuery`) and
-  `make_chart` (renders a bar/pie/line chart from a query). **Herd data stays on the
-  device;** only the user's questions and small results go over the wire.
+  `make_chart` — plus **action tools** that drive the app: `open_animal`, `filter_herd`
+  (sets `STATE.recSet` + banner), `create_reminder`, `mark_done`, `show_recommendations`.
+  `runTool` executes them against local state via the same `writeAdapter`/`render` the UI
+  uses. **Herd data stays on the device;** only the user's questions and small results go
+  over the wire.
+- **Voice:** a mic on the compose uses `SpeechRecognition`/`webkitSpeechRecognition`
+  (`setupVoice`) for dictation — the button hides where the API is absent (keyboard
+  dictation still works), so there's no dead end. A "Read answers aloud" setting
+  (`CFG.speak`) speaks assistant replies via `speechSynthesis` (`speak()`).
+- The assistant is reachable everywhere: the Home **ask bar** and per-card **Ask** buttons
+  call `openChat(seed)`, which sends a context-seeded question (held in `pendingSeed` until
+  a key is added).
 - `buildSystem()` builds the system prompt from the loaded schema (field list, date
-  fields, enum fields, and derived `ageYears` / `ageMonths`).
+  fields, enum fields, derived `ageYears`/`ageMonths`) and describes the action tools.
 
 ## Design system
 - **Palette:** paper `#F4F5F1`, card `#FFFFFF`, ink `#1A1E16`, muted `#6B7266`, line
@@ -161,6 +188,13 @@ It is a personal-use client for the owner's own Herdwatch account and data.
   (`hwbe.io`, `herdwatch.com`, `api.anthropic.com`).
 
 ## Ideas / roadmap (not yet done)
+- **Herdwatch write-back** — the reverse-engineered API is read-only here, so reminders
+  and "mark done" live on the device (`writeAdapter`). Capturing the real write endpoints
+  from the app would let the adapter POST tasks/events back to Herdwatch.
+- **MCP connector** — an optional, local-first, read-only MCP server that exposes the
+  herd to the user's own ChatGPT/Claude (reuses the auth flow + query engine). Trades the
+  "data stays on device" guarantee for the convenience of an existing assistant, so it is
+  strictly opt-in.
 - Purpose-built views for heavy record types (Reports, Fertilisers) instead of the
   generic list.
 - Optional: a small key-holding proxy so the chat's API key isn't re-entered each
